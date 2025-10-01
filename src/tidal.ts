@@ -62,8 +62,8 @@ export async function getDecodedToken() {
 
 const apiClient = createAPIClient(credentialsProvider);
 
-export const search = async (searchTerm: string) => {
-  return apiClient.GET('/searchResults/{id}', {
+export const search = async (searchTerm: string) =>
+  apiClient.GET('/searchResults/{id}', {
     params: {
       path: { id: searchTerm },
       query: {
@@ -73,4 +73,3 @@ export const search = async (searchTerm: string) => {
       },
     },
   });
-};
