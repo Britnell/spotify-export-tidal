@@ -1,0 +1,3 @@
+[submodule "tidal-sdk-web"]
+	path = tidal-sdk-web
+	url = https://github.com/tidal-music/tidal-sdk-web
