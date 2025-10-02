@@ -7,6 +7,30 @@ import {
 } from '../tidal-sdk-web/packages/auth/src/index';
 import { createAPIClient } from '../tidal-sdk-web/packages/api/dist/index';
 
+export type TTrack = {
+  id: string;
+  type: string;
+  attributes?: {
+    title?: string;
+    isrc?: string;
+    [key: string]: any;
+  };
+  relationships?: {
+    albums?: any;
+    artists?: any;
+    [other: string]: any;
+  };
+};
+
+export type TPL = {
+  type: string;
+  id: string;
+  attributes?: {
+    name: string;
+    numberOfItems?: number;
+  };
+};
+
 const CLIENT_ID = 'GIcepHVXA3SP67Yi';
 
 let countryCode = 'DE';
@@ -68,21 +92,90 @@ export const getUserPlaylists = (uid: string) =>
     },
   });
 
-export const searchTrack = async (searchTerm: string) =>
-  apiClient.GET('/searchResults/{id}', {
+export const searchTrack = async (searchTerm: string) => {
+  const search = await apiClient.GET('/searchResults/{id}', {
     params: {
       path: { id: searchTerm },
       query: {
         countryCode,
         explicitFilter: 'include',
-        include: ['topHits'],
+        include: ['tracks'],
       },
     },
   });
+
+  // const ids = search.
+
+  if (!search.data?.included) {
+    console.log(' nada?');
+    return [];
+  }
+  const ids = search.data?.included.map((tr) => tr.id);
+  console.log(ids);
+
+  // return apiClient.GET('/tracks',{
+  //   params: {
+  //     query: {
+
+  //     }
+  //   }
+  // })
+};
 // .then((res) => res.data?.included);
 
+export const getIRCS = (ids: string[]) => {
+  return apiClient.GET('/tracks', {
+    params: {
+      query: {
+        countryCode,
+        includes: ['albums', 'artists'],
+        'filter[isrc]': ids,
+      },
+    },
+  });
+};
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Fetches tracks from Tidal by their ISRCs in staggered chunks.
+ * The Tidal API limits fetching tracks by ISRC to 20 per request.
+ * This function handles chunking and makes sequential requests.
+ *
+ * @param isrcs - An array of ISRC strings.
+ * @param interval - The delay in milliseconds between each chunk request (default: 100).
+ * @returns A promise that resolves to an array of all fetched tracks.
+ */
+export async function getTracksByISRCsStaggered(isrcs: string[], interval: number = 100): Promise<TTrack[]> {
+  const chunkSize = 20;
+  const chunks: string[][] = [];
+
+  for (let i = 0; i < isrcs.length; i += chunkSize) {
+    chunks.push(isrcs.slice(i, i + chunkSize));
+  }
+
+  let allTracks: TTrack[] = [];
+
+  for (const chunk of chunks) {
+    try {
+      const response = await getIRCS(chunk);
+      const tracks: TTrack[] = response.data?.data || [];
+
+      allTracks = allTracks.concat(tracks);
+
+      if (interval > 0 && chunks.length > 1) {
+        await delay(interval);
+      }
+    } catch (error) {
+      console.error('Error fetching a chunk of tracks by ISRC:', error);
+      throw error;
+    }
+  }
+  return allTracks;
+}
+
 export const getPlaylist = (id: string) =>
-  apiClient.GET('/playlists/{id}', {
+  apiClient.GET('/playlists/{id}/relationships/items', {
     params: {
       path: {
         id,
