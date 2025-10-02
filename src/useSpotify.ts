@@ -85,17 +85,30 @@ export function useSpotify() {
     }
   };
 
-  const getPlaylists = async (tokenValue: string) => {
+  const getUsersPlaylists = async (tokenValue: string) => {
     const res = await spotifyApi('/me/playlists', tokenValue);
     if (res?.items) return res.items as SPL[];
     console.error(res);
     return null;
   };
 
-  const getTracks = async (id: string, tokenValue: string) => {
-    const res = await spotifyApi(`/playlists/${id}/tracks`, tokenValue);
-    console.log(res);
-    return res?.items.map((row) => row.track);
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const getPlaylistTracks = async (id: string, tokenValue: string) => {
+    let allTracks: any[] = [];
+    let nextUrl = `/playlists/${id}/tracks`;
+
+    while (nextUrl) {
+      const res = await spotifyApi(nextUrl, tokenValue);
+      if (!res) break;
+      allTracks = allTracks.concat(res.items.map((row) => row.track));
+      nextUrl = res.next;
+      if (nextUrl) {
+        nextUrl = nextUrl.replace('https://api.spotify.com/v1', '');
+        await delay(500);
+      }
+    }
+    return allTracks;
   };
 
   return {
@@ -104,7 +117,7 @@ export function useSpotify() {
     href,
     clearToken,
     spotifyApi,
-    getPlaylists,
-    getTracks,
+    getUsersPlaylists,
+    getPlaylistTracks,
   };
 }
