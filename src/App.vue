@@ -2,43 +2,51 @@
 import { ref } from 'vue';
 import Spotify from './Spotify.vue';
 import Tidal from './Tidal.vue';
-import { getIRCS, getISRCStaggered, searchTrack, type TTrack } from './tidal';
+import { getIRCS, getISRCStaggered, type TTrack, type TPL, _sel, addTracks } from './tidal';
 import type { STrack } from './useSpotify';
 
 const sexports = ref<STrack[]>([]);
 const imports = ref([]);
 const existing = ref<TTrack[]>([]);
+const selectedTidalPlaylist = ref<TPL | null>(_sel);
 
-const expo = async (track: STrack) => {
-  const name = track.name;
-  const artist = track.artists.map((art) => art.name);
-  // const album = track.album.name;
-  // const year = track.album.release_date.split('-')[0];
-  const query = [name, artist].flat().join(' ');
-  // console.log('EXP', { query });
-  // console.log(track);
-  // const res = await searchTrack(query);
-};
-
-const all = async () => {
+const runexport = async () => {
   const exports = sexports.value;
-
-  console.log(' exp ', exports.length);
+  console.log(' export ', exports.length);
 
   //  find by ISRC
   const exp_isrcs = exports.map((tr: STrack) => tr.external_ids.isrc);
   const isrcs = await getISRCStaggered(exp_isrcs, 500);
-  console.log('TID found ', isrcs.length);
+  console.log(' found by ISRC ', isrcs.length, isrcs);
+
+  // filter tracks that werent found by isrcs
+  const notFoundIsrcs = exports.filter((tr: STrack) => {
+    return !isrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc);
+  });
+
+  console.log('not found by ISRC ', notFoundIsrcs.length, notFoundIsrcs);
 };
 
-// function trackInExisting(track: STrack) {
-//   return existing.value.some((existingTrack) => {
-//     return (
-//       existingTrack.attributes?.title === track.name // existingTrack.attributes.title === track.artists.map((art) => art.name).join(' ')
-//     );
-//   });
-// }
+const expo = async (tr: STrack) => {
+  const artists = tr.artists?.map((a) => a.name).join(' ');
+  const q = tr.name + ' ' + artists;
+  console.log(existing.value);
 
+  // const resp = await searchTrack(q);
+  // console.log(resp);
+
+  //
+};
+
+const addtrack = async () => {
+  //
+
+  const pid = selectedTidalPlaylist.value?.id;
+  if (pid) {
+    const resp = await addTracks(pid, ['332595043']);
+    console.log(resp);
+  }
+};
 const loadExports = (list: STrack[]) => {
   sexports.value = list;
 };
@@ -60,23 +68,22 @@ const loadedExisting = (tracks: TTrack[]) => {
         <Spotify @exports="loadExports">
           <p>spotify loaded PL</p>
           <p>{{ sexports.length }} tracks</p>
-          <button @click="all" class="bg-blue-300">expo all</button>
-          <ul class="my-8">
-            <li v-for="tr in sexports" :key="tr.id">
-              <button @click="expo(tr)">
-                {{ tr.name }} - {{ tr.artists?.map((a) => a.name).join(', ') }}
-                <!-- [{{ tr.external_ids?.isrc }}] -->
-              </button>
+          <button @click="runexport" class="bg-blue-300">expo all</button>
+          <ul class="my-8 list-disc pl-5">
+            <li v-for="tr in sexports" :key="tr.id" @click="expo(tr)">
+              {{ tr.name }} - {{ tr.artists?.map((a) => a.name).join(', ') }}
             </li>
           </ul>
         </Spotify>
       </div>
     </div>
+
     <div>
       <h2 class="text-center text-3xl font-bold">Tidal</h2>
       <div class="border border-gray-400 rounded-md p-2">
-        <Tidal @pl-tracks="loadedExisting">
+        <Tidal @pl-tracks="loadedExisting" v-model:selected="selectedTidalPlaylist">
           <p>currently has {{ existing.length }} tracks</p>
+          <button class="x" @click="addtrack">add one</button>
           <ul class="my-4">
             <li v-for="tr in existing" :key="tr.id">
               {{ tr.attributes?.title }}

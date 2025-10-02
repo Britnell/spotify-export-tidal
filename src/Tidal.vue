@@ -4,25 +4,26 @@ import {
   login,
   handleRedirect,
   getDecodedToken,
-  searchTrack,
   getUser,
   getUserPlaylists,
-  _pl,
   getPlaylist,
   _tracks,
-  _sel,
   type TPL,
   type TTrack,
+  doLogout,
 } from './tidal';
+
+const props = defineProps<{
+  selected: TPL | null;
+}>();
 
 const token = ref(localStorage.getItem('authorizationCodeData'));
 const userid = ref('204460008');
-const playlists = ref<TPL[]>(_pl);
-const selected = ref<TPL | null>(_sel);
+const playlists = ref<TPL[]>([]);
 const tracks = ref<TTrack[]>(_tracks);
 // const newname = ref('');
 
-const emit = defineEmits(['pl-tracks']);
+const emit = defineEmits(['pl-tracks', 'update:selected']);
 
 onMounted(async () => {
   await handleRedirect();
@@ -46,11 +47,11 @@ onMounted(async () => {
     }
   }
 
-  if (!selected.value) return;
+  if (!props.selected) return;
 
   // load tracks
   if (tracks.value.length === 0) {
-    const res = await getPlaylist(selected.value.id);
+    const res = await getPlaylist(props.selected.id);
     if (res.data?.included) {
       tracks.value = res.data.included;
     }
@@ -63,7 +64,7 @@ onMounted(async () => {
 });
 
 const choose = async (pl: TPL) => {
-  selected.value = pl;
+  emit('update:selected', pl);
 
   const res = await getPlaylist(pl.id);
   if (res.data?.included) {
@@ -102,9 +103,14 @@ const choose = async (pl: TPL) => {
     <div v-else>
       <div class="flex justify-between">
         <h3 class="text-xl font-semibold">{{ selected.attributes?.name }}</h3>
-        <button @click="selected = null">cancel</button>
+        <button @click="$emit('update:selected', null)">cancel</button>
       </div>
       <slot></slot>
+
+      <p>
+        or
+        <button @click="doLogout">logout</button>
+      </p>
     </div>
   </div>
 </template>

@@ -39,7 +39,7 @@ async function initSdk() {
   await init({
     clientId: CLIENT_ID,
     credentialsStorageKey: 'authorizationCode',
-    scopes: ['user.read', 'playlists.read'],
+    scopes: ['user.read', 'playlists.read', 'playlists.write'],
   });
 }
 
@@ -104,6 +104,8 @@ export const searchTrack = async (searchTerm: string) => {
     },
   });
 
+  console.log(search);
+
   // const ids = search.
 
   if (!search.data?.included) {
@@ -111,26 +113,51 @@ export const searchTrack = async (searchTerm: string) => {
     return [];
   }
   const ids = search.data?.included.map((tr) => tr.id);
-  console.log(ids);
 
-  // return apiClient.GET('/tracks',{
-  //   params: {
-  //     query: {
+  const resp = await apiClient
+    .GET('/tracks', {
+      params: {
+        query: {
+          countryCode,
+          include: ['albums', 'artists'],
+          'filter[id]': ids,
+        },
+      },
+    })
+    .then((res) => res?.data?.data);
 
-  //     }
-  //   }
-  // })
+  console.log(resp);
+
+  return resp;
 };
-// .then((res) => res.data?.included);
 
 export const getIRCS = (ids: string[]) => {
-  return apiClient.GET('/tracks', {
+  return apiClient
+    .GET('/tracks', {
+      params: {
+        query: {
+          countryCode,
+          include: ['albums', 'artists'],
+          'filter[isrc]': ids,
+        },
+      },
+    })
+    .then((res) => res?.data?.data);
+};
+
+export const addTracks = (plid: string, trackids: string[]) => {
+  return apiClient.POST('/playlists/{id}/relationships/items', {
     params: {
+      path: { id: plid },
       query: {
         countryCode,
-        includes: ['albums', 'artists'],
-        'filter[isrc]': ids,
       },
+    },
+    body: {
+      data: trackids.map((id) => ({
+        id,
+        type: 'tracks' as const,
+      })),
     },
   });
 };
@@ -158,9 +185,10 @@ export async function getISRCStaggered(isrcs: string[], interval: number = 100):
 
   for (const chunk of chunks) {
     try {
-      const response = await getIRCS(chunk);
-      const tracks: TTrack[] = response.data?.data || [];
+      const resp = await getIRCS(chunk);
+      if (!resp) throw new Error('no response');
 
+      const tracks: TTrack[] = resp;
       allTracks = allTracks.concat(tracks);
 
       if (interval > 0 && chunks.length > 1) {
@@ -168,7 +196,8 @@ export async function getISRCStaggered(isrcs: string[], interval: number = 100):
       }
     } catch (error) {
       console.error('Error fetching a chunk of tracks by ISRC:', error);
-      throw error;
+      // logout?
+      // throw error;
     }
   }
   return allTracks;
