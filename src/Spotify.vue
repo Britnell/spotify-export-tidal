@@ -1,30 +1,17 @@
 <script setup lang="ts">
-// import { useQuery } from '@tanstack/vue-query';
 import { onMounted, ref } from 'vue';
 import { _playlists, _selected, _tracks } from './dummy';
-import { getPlaylists, getTracks, href, type SPL, type STrack } from './spotify';
+import { useSpotify, type SPL, type STrack } from './useSpotify';
 
-const token = ref('');
+const { loggedin, token, href, getPlaylists, getTracks } = useSpotify();
+
 const playlists = ref<SPL[]>(_playlists); //_playlists);
-const selected = ref<SPL | null>(_selected); //);
+const selected = ref<SPL | null>(null); //);
 const tracks = ref<STrack[]>(_tracks); //);
 
 const emit = defineEmits(['exports']);
 
 onMounted(async () => {
-  const url = new URLSearchParams(window.location.hash.slice(1));
-  const urlToken = url.get('access_token');
-
-  if (urlToken) {
-    localStorage.setItem('spotify_token', urlToken);
-    token.value = urlToken;
-  } else {
-    const storedToken = localStorage.getItem('spotify_token');
-    if (storedToken) {
-      token.value = storedToken;
-    }
-  }
-
   if (token.value && playlists.value.length == 0) {
     const items = await getPlaylists(token.value);
     if (items) {
