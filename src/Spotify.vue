@@ -2,14 +2,14 @@
 // import { useQuery } from '@tanstack/vue-query';
 import { onMounted, ref } from 'vue';
 import { _playlists, _selected, _tracks } from './dummy';
-import { getPlaylists, getTracks, href, type PL, type Track } from './spotify';
+import { getPlaylists, getTracks, href, type SPL, type STrack } from './spotify';
 
 const token = ref('');
-const playlists = ref<PL[]>(_playlists); //_playlists);
-const selected = ref<PL | null>(_selected); //);
-const tracks = ref<Track[]>(_tracks); //);
+const playlists = ref<SPL[]>(_playlists); //_playlists);
+const selected = ref<SPL | null>(_selected); //);
+const tracks = ref<STrack[]>(_tracks); //);
 
-defineEmits(['migrate']);
+const emit = defineEmits(['exports']);
 
 onMounted(async () => {
   const url = new URLSearchParams(window.location.hash.slice(1));
@@ -31,16 +31,20 @@ onMounted(async () => {
       playlists.value = items;
     }
   }
+
+  if (tracks) {
+    emit('exports', tracks.value);
+  }
 });
 
-const selectList = async (list: PL) => {
+const selectList = async (list: SPL) => {
   selected.value = list;
   tracks.value = await getTracks(list.id, token.value);
+  emit('exports', tracks.value);
 };
 </script>
 
 <template>
-  <h2>Spotify</h2>
   <div v-if="!token">
     <h3>Login</h3>
     <p>please login spotify</p>
@@ -53,7 +57,7 @@ const selectList = async (list: PL) => {
       <h3>select your playlist</h3>
       <ul>
         <li v-for="item in playlists" :key="item.id">
-          <button @click="selectList(item)">
+          <button @click="selectList(item)" class="flex gap-3 py-1">
             <img :src="item.images[2]?.url" />
             {{ item.name }}
             - {{ item.tracks.total }}
@@ -63,13 +67,15 @@ const selectList = async (list: PL) => {
     </div>
     <div v-else>
       <h3>{{ selected.name }}</h3>
-      <ul>
-        <li v-for="tr in tracks" @click="$emit('migrate', tr)">
-          <p class="bold">{{ tr.name }} by {{ tr.artists.map((ar) => ar.name).join(', ') }}</p>
-          <p>{{ tr.album.name }} ({{ tr.album.release_date }})</p>
+      <button @click="selected = null">cancel</button>
+      <slot></slot>
+      <!-- <ul>
+        <li v-for="tr in tracks" @click="$emit('migrate', tr)" class="p-1 hover:bg-gray-100">
+          <p class="font-bold">{{ tr.name }} by {{ tr.artists.map((ar) => ar.name).join(', ') }}</p>
+          <p class="pl-4">{{ tr.album.name }} ({{ tr.album.release_date }})</p>
           <p>{{ (tr.duration_ms / 1000 / 60).toFixed(1) }} mins</p>
         </li>
-      </ul>
+      </ul> -->
     </div>
   </div>
 </template>
