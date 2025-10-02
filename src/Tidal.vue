@@ -93,7 +93,7 @@ const choose = async (pl: TPL) => {
         </div> -->
 
       <div>
-        <h3>choose playlist</h3>
+        <h3 class="text-xl font-semibold">choose playlist</h3>
         <ul>
           <li v-for="pl in playlists" :key="pl.id" @click="choose(pl)">
             {{ pl.attributes?.name }}
@@ -105,7 +105,10 @@ const choose = async (pl: TPL) => {
     <!--  -->
 
     <div v-else>
-      <h3>{{ selected.attributes?.name }}</h3>
+      <div class="flex justify-between">
+        <h3 class="text-xl font-semibold">{{ selected.attributes?.name }}</h3>
+        <button @click="selected = null">cancel</button>
+      </div>
       <slot></slot>
     </div>
   </div>

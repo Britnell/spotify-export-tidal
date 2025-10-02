@@ -32,7 +32,7 @@ onMounted(async () => {
     }
   }
 
-  if (tracks) {
+  if (tracks.value) {
     emit('exports', tracks.value);
   }
 });
@@ -46,7 +46,7 @@ const selectList = async (list: SPL) => {
 
 <template>
   <div v-if="!token">
-    <h3>Login</h3>
+    <h3 class="text-xl font-semibold">Login</h3>
     <p>please login spotify</p>
 
     <a :href="href">login</a>
@@ -54,11 +54,11 @@ const selectList = async (list: SPL) => {
 
   <div v-else>
     <div v-if="!selected">
-      <h3>select your playlist</h3>
+      <h3 class="text-xl font-semibold">select your playlist</h3>
       <ul>
         <li v-for="item in playlists" :key="item.id">
           <button @click="selectList(item)" class="flex gap-3 py-1">
-            <img :src="item.images[2]?.url" />
+            <!-- <img :src="item.images[2]?.url" /> -->
             {{ item.name }}
             - {{ item.tracks.total }}
           </button>
@@ -66,16 +66,11 @@ const selectList = async (list: SPL) => {
       </ul>
     </div>
     <div v-else>
-      <h3>{{ selected.name }}</h3>
-      <button @click="selected = null">cancel</button>
+      <div class="flex justify-between">
+        <h3 class="text-xl font-semibold">{{ selected.name }}</h3>
+        <button @click="selected = null">cancel</button>
+      </div>
       <slot></slot>
-      <!-- <ul>
-        <li v-for="tr in tracks" @click="$emit('migrate', tr)" class="p-1 hover:bg-gray-100">
-          <p class="font-bold">{{ tr.name }} by {{ tr.artists.map((ar) => ar.name).join(', ') }}</p>
-          <p class="pl-4">{{ tr.album.name }} ({{ tr.album.release_date }})</p>
-          <p>{{ (tr.duration_ms / 1000 / 60).toFixed(1) }} mins</p>
-        </li>
-      </ul> -->
     </div>
   </div>
 </template>
