@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import Spotify from './Spotify.vue';
 import Tidal from './Tidal.vue';
-import { getIRCS, searchTrack, type TTrack } from './tidal';
+import { getIRCS, getISRCStaggered, searchTrack, type TTrack } from './tidal';
 import type { STrack } from './useSpotify';
 
 const sexports = ref<STrack[]>([]);
@@ -16,18 +16,19 @@ const expo = async (track: STrack) => {
   // const year = track.album.release_date.split('-')[0];
   const query = [name, artist].flat().join(' ');
   // console.log('EXP', { query });
-  console.log(track);
-
-  const res = await searchTrack(query);
+  // console.log(track);
+  // const res = await searchTrack(query);
 };
 
 const all = async () => {
-  const isrcs = sexports.value.map((tr: STrack) => tr.external_ids.isrc);
-  //  make set
-  console.log('SPO', isrcs);
-  const res = await getIRCS(isrcs);
-  const tidal = res.data?.data;
-  console.log('TID', tidal);
+  const exports = sexports.value;
+
+  console.log(' exp ', exports.length);
+
+  //  find by ISRC
+  const exp_isrcs = exports.map((tr: STrack) => tr.external_ids.isrc);
+  const isrcs = await getISRCStaggered(exp_isrcs, 500);
+  console.log('TID found ', isrcs.length);
 };
 
 // function trackInExisting(track: STrack) {
@@ -63,7 +64,8 @@ const loadedExisting = (tracks: TTrack[]) => {
           <ul class="my-8">
             <li v-for="tr in sexports" :key="tr.id">
               <button @click="expo(tr)">
-                {{ tr.name }} - {{ tr.artists?.map((a) => a.name).join(', ') }} [{{ tr.external_ids.isrc }}]
+                {{ tr.name }} - {{ tr.artists?.map((a) => a.name).join(', ') }}
+                <!-- [{{ tr.external_ids?.isrc }}] -->
               </button>
             </li>
           </ul>

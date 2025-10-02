@@ -146,7 +146,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * @param interval - The delay in milliseconds between each chunk request (default: 100).
  * @returns A promise that resolves to an array of all fetched tracks.
  */
-export async function getTracksByISRCsStaggered(isrcs: string[], interval: number = 100): Promise<TTrack[]> {
+export async function getISRCStaggered(isrcs: string[], interval: number = 100): Promise<TTrack[]> {
   const chunkSize = 20;
   const chunks: string[][] = [];
 

@@ -95,8 +95,7 @@ export function useSpotify() {
   const getTracks = async (id: string, tokenValue: string) => {
     const res = await spotifyApi(`/playlists/${id}/tracks`, tokenValue);
     console.log(res);
-
-    return res?.items;
+    return res?.items.map((row) => row.track);
   };
 
   return {

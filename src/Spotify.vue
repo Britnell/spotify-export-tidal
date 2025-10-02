@@ -26,8 +26,19 @@ onMounted(async () => {
 
 const selectList = async (list: SPL) => {
   selected.value = list;
-  tracks.value = await getTracks(list.id, token.value);
-  emit('exports', tracks.value);
+  const resp = await getTracks(list.id, token.value);
+  console.log(resp);
+
+  if (resp) {
+    tracks.value = resp;
+    emit('exports', tracks.value);
+  }
+};
+
+const unselect = () => {
+  selected.value = null;
+  tracks.value = [];
+  emit('exports', []);
 };
 </script>
 
@@ -55,7 +66,7 @@ const selectList = async (list: SPL) => {
     <div v-else>
       <div class="flex justify-between">
         <h3 class="text-xl font-semibold">{{ selected.name }}</h3>
-        <button @click="selected = null">cancel</button>
+        <button @click="unselect">cancel</button>
       </div>
       <slot></slot>
     </div>
