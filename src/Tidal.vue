@@ -6,28 +6,27 @@ import {
   getDecodedToken,
   getUser,
   getUserPlaylists,
-  getPlaylist,
-  _tracks,
+  getPlaylistTracks,
   type TPL,
   type TTrack,
   doLogout,
 } from './tidal';
 
-const props = defineProps<{
+defineProps<{
   selected: TPL | null;
 }>();
 
 const token = ref(localStorage.getItem('authorizationCodeData'));
 const userid = ref('204460008');
 const playlists = ref<TPL[]>([]);
-const tracks = ref<TTrack[]>(_tracks);
-// const newname = ref('');
+const tracks = ref<TTrack[]>([]);
+const newname = ref('');
 
 const emit = defineEmits(['pl-tracks', 'update:selected']);
 
 onMounted(async () => {
+  // * api init
   await handleRedirect();
-
   const stored = await getDecodedToken();
   if (!stored) return;
   token.value = stored;
@@ -46,31 +45,17 @@ onMounted(async () => {
       playlists.value = res.data?.data;
     }
   }
-
-  if (!props.selected) return;
-
-  // load tracks
-  if (tracks.value.length === 0) {
-    const res = await getPlaylist(props.selected.id);
-    if (res.data?.included) {
-      tracks.value = res.data.included;
-    }
-  }
-
-  if (tracks.value.length > 0) {
-    emit('pl-tracks', tracks.value);
-    return;
-  }
 });
 
 const choose = async (pl: TPL) => {
   emit('update:selected', pl);
+  const res = await getPlaylistTracks(pl.id);
+  if (res) tracks.value = res;
+  emit('pl-tracks', tracks.value);
+};
 
-  const res = await getPlaylist(pl.id);
-  if (res.data?.included) {
-    tracks.value = res.data.included;
-    emit('pl-tracks', tracks.value);
-  }
+const create = () => {
+  console.log(' create ', newname.value);
 };
 </script>
 
@@ -82,17 +67,19 @@ const choose = async (pl: TPL) => {
   </div>
   <div v-else>
     <div v-if="!selected">
-      <!-- <div class="my-8">
-          <p>create playlist</p>
-          <label for="newname">Name</label>
-          <input v-model="newname" id="newname" name="newname" />
-        </div> -->
+      <div class="my-8">
+        <p>create playlist</p>
+        <label for="newname">Name</label>
+        <input v-model="newname" id="newname" name="newname" />
+        <button @click="create">create</button>
+      </div>
 
       <div>
         <h3 class="text-xl font-semibold">choose playlist</h3>
         <ul>
           <li v-for="pl in playlists" :key="pl.id" @click="choose(pl)">
             {{ pl.attributes?.name }}
+            <span class="x text-sm ml-4 text-gray-400"> {{ pl.attributes?.numberOfItems }} tracks </span>
           </li>
         </ul>
       </div>
