@@ -121,3 +121,37 @@ export function useSpotify() {
     getPlaylistTracks,
   };
 }
+
+export function exportTracksToCsv(tracks: STrack[]): string {
+  const headers = ['Song Name', 'Artists', 'Album Name', 'Album Release Date'];
+  const csvContent = [
+    headers.join(';'),
+    ...tracks.map((track) =>
+      [
+        track.name,
+        track.artists.map((artist) => artist.name).join(','),
+        track.album.name,
+        track.album.release_date,
+      ].join(';'),
+    ),
+  ].join('\n');
+
+  return csvContent;
+}
+
+export function downloadCsvFile(tracks: STrack[], filename: string = 'tracks.csv'): void {
+  const csvContent = exportTracksToCsv(tracks);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+}
