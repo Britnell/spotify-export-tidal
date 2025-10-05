@@ -118,6 +118,18 @@ export const getIRCS = (ids: string[]) => {
     .then((res) => res?.data?.data);
 };
 
+// const trackids = _pl.data?.data?.map((tr) => tr.id);
+// const tracks = await apiClient.GET('/tracks', {
+//   params: {
+//     query: {
+//       countryCode,
+//       include: ['albums', 'artists'],
+//       'filter[id]': trackids,
+//       limit: 100,
+//     },
+//   },
+// });
+
 export const addTracks = (plid: string, trackids: string[]) => {
   return apiClient.POST('/playlists/{id}/relationships/items', {
     params: {
@@ -152,16 +164,6 @@ export async function addTracksStaggered(plid: string, trackids: string[]): Prom
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function extractCursorFromUrl(path: string) {
-  try {
-    const params = new URLSearchParams(path);
-    const cursor = params.get('page[cursor]');
-    if (cursor) return cursor;
-  } catch {
-    return;
-  }
-}
 
 /**
  * A reusable function for handling staggered chunked API requests.
@@ -217,8 +219,51 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   });
 }
 
-export const getPlaylistTracks = async (id: string) => {
-  const resp = await apiClient.GET('/playlists/{id}/relationships/items', {
+const getPlaylistIds = async (id: string, total: number) => {
+  if (!total) return { data: { data: [] } };
+
+  let allItems: any[] = [];
+  let cursor: string | undefined;
+
+  // Calculate how many requests needed (20 items per request max)
+  const numRequests = Math.ceil(total / 20);
+  const requestIndices = Array.from({ length: numRequests }, (_, i) => i);
+
+  // Use staggerReq to fetch all pages with cursor pagination
+  await staggerReq(requestIndices, 1, async () => {
+    const resp = await apiClient.GET('/playlists/{id}/relationships/items', {
+      params: {
+        path: { id },
+        query: {
+          include: ['items'],
+          countryCode,
+          ...(cursor && { 'page[cursor]': cursor }),
+        },
+      },
+    });
+
+    const items = resp.data?.data || [];
+    allItems = allItems.concat(items);
+
+    // Update cursor for next request
+    cursor = resp.data?.links?.meta?.nextCursor;
+
+    return items;
+  });
+
+  return { data: { data: allItems } };
+};
+
+export const getPlaylistTracks = async (pl: TPL) => {
+  const trackids = await getPlaylistTracksCursor(pl.id);
+  console.log(trackids);
+
+  return [];
+};
+export const getPlaylistTracksCursor = async (id: string) => {
+  let allTracks: TTrack[] = [];
+
+  const first = await apiClient.GET('/playlists/{id}/relationships/items', {
     params: {
       path: { id },
       query: {
@@ -227,35 +272,40 @@ export const getPlaylistTracks = async (id: string) => {
       },
     },
   });
-  return resp.data?.data;
-};
-export const getPlaylistTracksCursor = async (id: string) => {
-  let allTracks: TTrack[] = [];
-  let cursor: string | undefined;
 
-  while (true) {
-    const resp = await apiClient.GET('/playlists/{id}/relationships/items', {
-      params: {
-        path: { id },
-        query: {
-          include: ['items'],
-          countryCode,
-          'page[cursor]': cursor, //&& encodeURIComponent(cursor),
-        },
-      },
-    });
+  if (first.data?.data) {
+    allTracks = first.data.data;
+  }
 
-    if (!resp.data?.data) break;
-
-    allTracks = allTracks.concat(resp.data.data);
-    const nextPath = resp.data?.links?.next;
-    if (!nextPath) break;
-    cursor = extractCursorFromUrl(nextPath);
-    console.log({ nextPath });
-    console.log({ cursor });
-    if (!cursor) break;
-    await delay(8000);
+  let next = first.data?.links?.next;
+  while (next) {
+    await delay(interval);
+    const resp = await tidalApi(next);
+    if (resp.data) {
+      allTracks = allTracks.concat(resp.data);
+    }
+    next = resp.links?.next;
   }
 
   return allTracks;
+};
+
+const base = 'https://openapi.tidal.com/v2';
+
+const tidalApi = async (path: string) => {
+  const credentials = await credentialsProvider.getCredentials();
+  const token = credentials.token;
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+  const response = await fetch(base + path, {
+    method: 'get',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Tidal API request failed: ${response.statusText}`);
+  }
+  return response.json();
 };

@@ -10,6 +10,7 @@ import {
   type TPL,
   type TTrack,
   doLogout,
+  getPlaylistTracksCursor,
 } from './tidal';
 
 defineProps<{
@@ -49,8 +50,8 @@ onMounted(async () => {
 
 const choose = async (pl: TPL) => {
   emit('update:selected', pl);
-  const res = await getPlaylistTracks(pl.id);
-  if (res) tracks.value = res;
+  const res = await getPlaylistTracks(pl);
+  tracks.value = res;
   emit('pl-tracks', tracks.value);
 };
 

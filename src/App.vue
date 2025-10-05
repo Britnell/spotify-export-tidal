@@ -87,6 +87,8 @@ const loadExports = (list: STrack[]) => {
 };
 
 const loadedExisting = (tracks: TTrack[]) => {
+  console.log(tracks);
+
   existing.value = tracks;
 };
 </script>
