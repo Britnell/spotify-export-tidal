@@ -108,7 +108,7 @@ const exportPl = async () => {
         art: missing.artists.map((a) => a.name),
         alb: missing.album.name,
       };
-      const sq = Object.values(q).join(' ');
+      const sq = [q.name, q.art].flat().join(' ');
       const searchres = await searchTrack(sq);
       const list = parseSearchRes(searchres);
       console.log(list);
