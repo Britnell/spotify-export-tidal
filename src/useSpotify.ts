@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 export const href =
   'https://accounts.spotify.com/authorize' +
@@ -31,8 +31,8 @@ export type STrack = {
 };
 
 export function useSpotify() {
-  const loggedin = ref(false);
   const token = ref('');
+  const loggedin = computed(() => !!token.value);
 
   onMounted(() => {
     const url = new URLSearchParams(window.location.hash.slice(1));
@@ -47,13 +47,10 @@ export function useSpotify() {
         token.value = storedToken;
       }
     }
-
-    loggedin.value = !!token.value;
   });
 
   const clearToken = () => {
     token.value = '';
-    loggedin.value = false;
     localStorage.removeItem('spotify_token');
   };
 

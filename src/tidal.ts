@@ -1,3 +1,4 @@
+import { computed, onMounted, ref, watch } from 'vue';
 import {
   init,
   initializeLogin,
@@ -37,28 +38,57 @@ let countryCode = 'DE';
 const interval = 600;
 let token = '';
 
-async function initSdk() {
-  await init({
-    clientId: CLIENT_ID,
-    credentialsStorageKey: 'authorizationCode',
-    scopes: ['user.read', 'playlists.read', 'playlists.write'],
-  });
-}
+const apiClient = createAPIClient(credentialsProvider);
 
-export async function login() {
-  await initSdk();
-  const loginUrl = await initializeLogin({
-    redirectUri: 'http://localhost:5173/',
+export function useTidal() {
+  const token = ref('');
+  const loginUrl = ref('');
+  const userid = ref('');
+  const loggedin = computed(() => token.value && userid.value);
+  const playlists = ref<TPL[]>([]);
+
+  onMounted(async () => {
+    await init({
+      clientId: CLIENT_ID,
+      credentialsStorageKey: 'authorizationCode',
+      scopes: ['user.read', 'playlists.read', 'playlists.write'],
+    });
+
+    loginUrl.value = await initializeLogin({
+      redirectUri: 'http://localhost:5173/',
+    });
+
+    await handleRedirect();
+
+    const credentials = await credentialsProvider.getCredentials();
+
+    token.value = credentials.token || '';
+    userid.value = credentials.userId || '';
+
+    if (token.value && userid.value) {
+      const res = await getUserPlaylists(userid.value);
+      if (res.data) {
+        playlists.value = res.data?.data;
+      }
+    }
   });
-  window.open(loginUrl, '_self');
+
+  // watch(loggedin, async (val) => {
+  //   //
+  // });
+
+  return {
+    token,
+    loggedin,
+    loginUrl,
+    doLogout,
+    playlists,
+  };
 }
 
 export async function handleRedirect() {
   if (window.location.search.length > 0) {
-    await initSdk();
     await finalizeLogin(window.location.search);
-    const credentials = await credentialsProvider.getCredentials();
-    token = credentials.token || '';
     window.location.replace('/');
   }
 }
@@ -67,15 +97,6 @@ export function doLogout() {
   logout();
   window.location.reload();
 }
-
-export async function getDecodedToken() {
-  await initSdk();
-  const credentials = await credentialsProvider.getCredentials();
-  token = credentials.token || '';
-  return credentials.token;
-}
-
-const apiClient = createAPIClient(credentialsProvider);
 
 export const getUser = () =>
   apiClient.GET('/users/me').then((res) => {
@@ -119,18 +140,6 @@ export const getIRCS = (ids: string[]) => {
     })
     .then((res) => res?.data?.data);
 };
-
-// const trackids = _pl.data?.data?.map((tr) => tr.id);
-// const tracks = await apiClient.GET('/tracks', {
-//   params: {
-//     query: {
-//       countryCode,
-//       include: ['albums', 'artists'],
-//       'filter[id]': trackids,
-//       limit: 100,
-//     },
-//   },
-// });
 
 export const addTracks = (plid: string, trackids: string[]) => {
   return apiClient.POST('/playlists/{id}/relationships/items', {
@@ -196,15 +205,22 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
 }
 
 export const getPlaylistTracks = async (pl: TPL) => {
-  const trackids = await getPlaylistTrackIds(pl.id);
-  //
-
-  const resp = await getTracks(trackids);
-
-  return trackids;
+  return await getPlaylistTrackIds(pl.id);
 };
 
-export const getPlaylistTrackIds = async (id: string) => {
+// const getTracks = async (ids:string[])=>{
+// const tracks = await apiClient.GET('/tracks', {
+//   params: {
+//     query: {
+//       countryCode,
+//       include: ['albums', 'artists'],
+//       'filter[id]': ids,
+//     },
+//   },
+// });
+// }
+
+const getPlaylistTrackIds = async (id: string) => {
   let allTracks: TTrack[] = [];
   const first = await apiClient.GET('/playlists/{id}/relationships/items', {
     params: {

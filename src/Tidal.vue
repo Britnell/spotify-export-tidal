@@ -1,51 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import {
-  login,
-  handleRedirect,
-  getDecodedToken,
-  getUser,
-  getUserPlaylists,
-  getPlaylistTracks,
-  type TPL,
-  type TTrack,
-  doLogout,
-  getPlaylistTracksCursor,
-} from './tidal';
+import { effect, onMounted, ref, watch } from 'vue';
+import { getPlaylistTracks, useTidal, type TPL, type TTrack } from './tidal';
 
 defineProps<{
   selected: TPL | null;
 }>();
 
-const token = ref(localStorage.getItem('authorizationCodeData'));
-const userid = ref('204460008');
-const playlists = ref<TPL[]>([]);
+const emit = defineEmits(['pl-tracks', 'update:selected']);
+
+const { loggedin, loginUrl, doLogout, playlists } = useTidal();
+
 const tracks = ref<TTrack[]>([]);
 const newname = ref('');
 
-const emit = defineEmits(['pl-tracks', 'update:selected']);
-
-onMounted(async () => {
-  // * api init
-  await handleRedirect();
-  const stored = await getDecodedToken();
-  if (!stored) return;
-  token.value = stored;
-
-  // * load user
-  if (!userid.value) {
-    const user = await getUser();
-    if (!user) return;
-    userid.value = user.id;
-  }
-
-  // load users' playlists
-  if (playlists.value.length === 0) {
-    const res = await getUserPlaylists(userid.value);
-    if (res.data) {
-      playlists.value = res.data?.data;
-    }
-  }
+watch(loggedin, () => {
+  if (!loggedin.value) return;
+  console.log('ll');
 });
 
 const choose = async (pl: TPL) => {
@@ -61,15 +31,15 @@ const create = () => {
 </script>
 
 <template>
-  <div v-if="!token">
+  <div v-if="!loggedin">
     <p>please login</p>
-    <button @click="login">login</button>
-    <div v-if="token"></div>
+    <a :href="loginUrl">login</a>
   </div>
   <div v-else>
+    <h2>choose playlist to export to</h2>
     <div v-if="!selected">
       <div class="my-8">
-        <p>create playlist</p>
+        <h3>create playlist</h3>
         <label for="newname">Name</label>
         <input v-model="newname" id="newname" name="newname" />
         <button @click="create">create</button>
@@ -84,6 +54,11 @@ const create = () => {
           </li>
         </ul>
       </div>
+
+      <p>
+        or
+        <button @click="doLogout">logout</button>
+      </p>
     </div>
 
     <!--  -->
@@ -94,11 +69,6 @@ const create = () => {
         <button @click="$emit('update:selected', null)">cancel</button>
       </div>
       <slot></slot>
-
-      <p>
-        or
-        <button @click="doLogout">logout</button>
-      </p>
     </div>
   </div>
 </template>
