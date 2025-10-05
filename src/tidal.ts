@@ -65,7 +65,7 @@ export function useTidal() {
 
     if (window.location.search.length > 0) {
       await finalizeLogin(window.location.search);
-      window.location.replace('/');
+      window.location.replace('/app');
       return;
     }
 
@@ -103,7 +103,7 @@ export function useTidal() {
       scopes: ['user.read', 'playlists.read', 'playlists.write'],
     });
     const loginUrl = await initializeLogin({
-      redirectUri: 'http://localhost:5173/',
+      redirectUri: 'http://localhost:5173/app',
     });
     window.open(loginUrl, '_self');
   }

@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 export const href =
   'https://accounts.spotify.com/authorize' +
   '?client_id=37e3c48b005d4e0f827b0e135ed8e58d&response_type=token&redirect_uri=' +
-  encodeURIComponent('http://localhost:5173');
+  encodeURIComponent('http://localhost:5173/app');
 
 export type SPL = {
   id: string;
@@ -47,7 +47,7 @@ export function useSpotify() {
     if (urlToken) {
       localStorage.setItem('spotify_token', urlToken);
       token.value = urlToken;
-      window.location.replace('/');
+      window.location.replace('/app');
     } else {
       const storedToken = localStorage.getItem('spotify_token');
       if (storedToken) {

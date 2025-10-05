@@ -1,7 +1,16 @@
-# Spotify to Tidal Export
+# Export Spotify to Tidal 
 
-Free and Open source
+Free and Open source tool to export your spotify, and import them to Tidal.
+
+- spotify API to export tracks
+- Tidal api to import tracks
+- everything happens on the client, the app only has access while you use it
+- of course no tokens are saved or sent anywhere
+- ISRC to find exact matching track
+- no danger of loosing anything
+- only READS spotify playlists
+- only CREATES new tidal playlists
 
 ### my todolist
+- [x] download csv
 - [ ] search for missing tracks
-- [ ] download csv

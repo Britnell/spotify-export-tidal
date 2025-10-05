@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { addTracksStaggered, findISRCStaggered, type TPL, useTidal, getPlaylistTracks, createPlaylist } from './tidal';
-import { useSpotify, type SPL, type STrack } from './useSpotify';
+import { downloadCsvFile, useSpotify, type SPL, type STrack } from './useSpotify';
 
 const spotify = useSpotify();
 const tidal = useTidal();
@@ -92,6 +92,12 @@ const exportPl = async () => {
   // console.log(' imp exist isrcs ', existing.length);
 };
 
+const downloadcsv = () => {
+  const name = spotify.selected.value?.name;
+
+  downloadCsvFile(notFoundExports.value, `${name}-missing tracks`);
+};
+
 watch(
   [tidal.tracks, spotify.tracks],
   () => {
@@ -122,7 +128,7 @@ watch(
       <h2 class="h2 step">1. login</h2>
       <p v-if="!loggedin">
         Questions before you give access? read
-        <a href="#faq">FAQ</a>
+        <a href="/#faq">FAQ</a>
       </p>
 
       <div v-if="!spotify.loggedin.value">
@@ -218,7 +224,7 @@ watch(
               </li>
             </ul>
           </details>
-          <button class="button">download as csv</button>
+          <button class="button" @click="downloadcsv">download as csv</button>
         </div>
       </div>
     </div>
