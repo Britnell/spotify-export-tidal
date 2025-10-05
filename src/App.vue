@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { addTracksStaggered, findISRCStaggered, type TPL, useTidal, getPlaylistTracks, createPlaylist } from './tidal';
 import { useSpotify, type SPL, type STrack } from './useSpotify';
 
@@ -19,7 +19,6 @@ const selectSpotifyPl = async (pl: SPL) => {
   const tracks = await spotify.getPlaylistTracks(pl.id, spotify.token.value);
   spotify.tracks.value = tracks;
 
-  log.value = [...log.value, `Exporting spotify playlist with ${tracks.length} tracks`];
   //
 };
 
@@ -32,7 +31,6 @@ const selectTidal = async (pl: TPL) => {
   tidal.selected.value = pl;
   const tracks = await getPlaylistTracks(pl.id);
   tidal.tracks.value = tracks;
-  log.value = [...log.value, `target Tidal playlist currently has ${tracks.length} tracks `, 'ready'];
 };
 
 const tidalUnselect = () => {
@@ -93,6 +91,24 @@ const exportPl = async () => {
   // console.log(' exp isrcs ', isrcs.length);
   // console.log(' imp exist isrcs ', existing.length);
 };
+
+watch(
+  [tidal.tracks, spotify.tracks],
+  () => {
+    if (!tidal.selected.value || !spotify.selected.value) {
+      return;
+    }
+
+    log.value = [
+      `Exporting spotify playlist with ${spotify.tracks.value.length} tracks`,
+      `target Tidal playlist currently has ${tidal.tracks.value.length} tracks `,
+      'ready',
+    ];
+  },
+  {
+    deep: true,
+  },
+);
 </script>
 
 <template>
@@ -193,7 +209,7 @@ const exportPl = async () => {
         <div class="my-8" v-if="notFoundExports.length > 0">
           <details>
             <summary>
-              <h4>tracks not found:</h4>
+              <h4 class="h4 inline">tracks not found:</h4>
             </summary>
             <ul class="x">
               <li v-for="tr in notFoundExports" class="my-2" :key="tr.id">
@@ -202,7 +218,7 @@ const exportPl = async () => {
               </li>
             </ul>
           </details>
-          <button>download as csv</button>
+          <button class="button">download as csv</button>
         </div>
       </div>
     </div>
