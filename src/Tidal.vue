@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { effect, onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { getPlaylistTracks, useTidal, type TPL, type TTrack } from './tidal';
 
 defineProps<{
@@ -20,7 +20,7 @@ watch(loggedin, () => {
 
 const choose = async (pl: TPL) => {
   emit('update:selected', pl);
-  const res = await getPlaylistTracks(pl);
+  const res = await getPlaylistTracks(pl.id);
   tracks.value = res;
   emit('pl-tracks', tracks.value);
 };

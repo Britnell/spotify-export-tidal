@@ -254,6 +254,7 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
 
 export const getPlaylistTracks = async (id: string) => {
   let allTracks: TTrack[] = [];
+
   const first = await apiClient.GET('/playlists/{id}/relationships/items', {
     params: {
       path: { id },
@@ -264,6 +265,8 @@ export const getPlaylistTracks = async (id: string) => {
     },
   });
 
+  // console.log(first);
+
   if (first.data?.included) {
     allTracks = first.data.included;
   }
@@ -272,12 +275,15 @@ export const getPlaylistTracks = async (id: string) => {
   while (next) {
     await delay(interval);
     const resp = await tidalApi(next);
+    // console.log(resp.included);
 
     if (resp.included) {
       allTracks = allTracks.concat(resp.included);
     }
     next = resp.links?.next;
   }
+  console.log(allTracks);
+
   return allTracks;
 };
 
