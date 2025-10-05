@@ -127,8 +127,8 @@ watch(
     <div class="x">
       <h2 class="h2 step">1. login</h2>
       <p v-if="!loggedin">
-        Questions before you give access? read
-        <a href="/#faq">FAQ</a>
+        Questions before you give access?
+        <a href="/#faq">read our FAQ</a>
       </p>
 
       <div v-if="!spotify.loggedin.value">
