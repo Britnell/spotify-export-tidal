@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { addTracksStaggered, findISRCStaggered, type TPL, useTidal, getPlaylistTracks, createPlaylist } from './tidal';
+import { computed, onMounted, ref, watch } from 'vue';
+import {
+  addTracksStaggered,
+  findISRCStaggered,
+  type TPL,
+  useTidal,
+  getPlaylistTracks,
+  createPlaylist,
+  searchTrack,
+} from './tidal';
 import { downloadCsvFile, useSpotify, type SPL, type STrack } from './useSpotify';
+import { parseSearchRes } from './helper';
 
 const spotify = useSpotify();
 const tidal = useTidal();
@@ -13,6 +22,9 @@ const loggedin = computed(() => {
   return spotify.loggedin.value && tidal.loggedin.value;
 });
 
+onMounted(() => {
+  // const s =
+});
 const selectSpotifyPl = async (pl: SPL) => {
   spotify.selected.value = pl;
 
@@ -88,8 +100,20 @@ const exportPl = async () => {
 
   log.value = [...log.value, `${notFound.length} tracks not found on tidal`];
 
-  // console.log(' exp isrcs ', isrcs.length);
-  // console.log(' imp exist isrcs ', existing.length);
+  for (let x = 0; x < 2; x++) {
+    const missing = notFound[x];
+    if (missing) {
+      const q = {
+        name: missing.name,
+        art: missing.artists.map((a) => a.name),
+        alb: missing.album.name,
+      };
+      const sq = Object.values(q).join(' ');
+      const searchres = await searchTrack(sq);
+      const list = parseSearchRes(searchres);
+      console.log(list);
+    }
+  }
 };
 
 const downloadcsv = () => {
@@ -230,5 +254,3 @@ watch(
     </div>
   </main>
 </template>
-
-<style scoped></style>

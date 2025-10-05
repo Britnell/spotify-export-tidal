@@ -5,6 +5,17 @@
     cursor: pointer;
   }
 
+  body {
+    font-family: system-ui, sans-serif;
+  }
+
+  .h2,
+  .h3,
+  .h4 {
+    font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT',
+      'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif;
+    /* font-family: Avenir, Montserrat, Corbel, 'URW Gothic', source-sans-pro, sans-serif; */
+  }
   .h2 {
     @apply text-2xl font-bold;
   }
@@ -22,7 +33,7 @@
 
 @layer components {
   .step {
-    @apply bg-blue-100 rounded-md;
+    @apply bg-blue-100 rounded-md px-2 py-1;
   }
   .button.sm {
     @apply text-sm px-1;

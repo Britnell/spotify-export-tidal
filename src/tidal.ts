@@ -147,16 +147,32 @@ export const getUserPlaylists = (uid: string) =>
   });
 
 export const searchTrack = async (searchTerm: string) => {
-  return apiClient.GET('/searchResults/{id}', {
+  const search = await apiClient.GET('/searchResults/{id}', {
     params: {
       path: { id: searchTerm },
       query: {
         countryCode,
-        // explicitFilter: 'include,exclude',
+        explicitFilter: 'include,exclude',
         include: ['tracks'],
       },
     },
   });
+
+  const ids = search.data?.included?.map((it) => it.id);
+
+  if (!ids) return null;
+
+  const tracks = await apiClient.GET('/tracks', {
+    params: {
+      query: {
+        countryCode,
+        include: ['albums', 'artists'],
+        'filter[id]': ids,
+      },
+    },
+  });
+
+  return tracks.data;
 };
 
 export const getIRCS = (ids: string[]) => {

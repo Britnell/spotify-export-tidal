@@ -14,3 +14,5 @@ Free and Open source tool to export your spotify, and import them to Tidal.
 ### my todolist
 - [x] download csv
 - [ ] search for missing tracks
+- [ ] https://www.npmjs.com/package/bluesky-likes
+- [ ] kofi

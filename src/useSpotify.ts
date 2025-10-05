@@ -52,8 +52,6 @@ export function useSpotify() {
       const storedToken = localStorage.getItem('spotify_token');
       if (storedToken) {
         token.value = storedToken;
-      } else {
-        console.log(' No tok?');
       }
     }
 
