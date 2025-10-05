@@ -30,22 +30,39 @@ export type STrack = {
   };
 };
 
+// "Unable to verify challenge with id 75ee768e-33b8-4b9f-8d42-6b6fbf81fe10"
+
 export function useSpotify() {
   const token = ref('');
   const loggedin = computed(() => !!token.value);
+  const playlists = ref<SPL[]>([]);
+  // const username = ref('');
+  const selected = ref<SPL | null>();
+  const tracks = ref<STrack[]>([]);
 
-  onMounted(() => {
+  onMounted(async () => {
     const url = new URLSearchParams(window.location.hash.slice(1));
     const urlToken = url.get('access_token');
 
     if (urlToken) {
       localStorage.setItem('spotify_token', urlToken);
       token.value = urlToken;
+      window.location.replace('/');
     } else {
       const storedToken = localStorage.getItem('spotify_token');
       if (storedToken) {
         token.value = storedToken;
+      } else {
+        console.log(' No tok?');
       }
+    }
+
+    if (!token.value) return;
+
+    // load user palylists
+    const resp = await getUsersPlaylists(token.value);
+    if (resp) {
+      playlists.value = resp;
     }
   });
 
@@ -114,8 +131,10 @@ export function useSpotify() {
     href,
     clearToken,
     spotifyApi,
-    getUsersPlaylists,
+    playlists,
     getPlaylistTracks,
+    selected,
+    tracks,
   };
 }
 

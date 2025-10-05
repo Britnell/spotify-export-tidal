@@ -3,9 +3,8 @@ import { onMounted, ref } from 'vue';
 import { _playlists, _selected, _tracks } from './dummy';
 import { useSpotify, type SPL, type STrack } from './useSpotify';
 
-const { loggedin, token, href, getUsersPlaylists, getPlaylistTracks } = useSpotify();
+const { loggedin, token, href, playlists, getPlaylistTracks } = useSpotify();
 
-const playlists = ref<SPL[]>(_playlists); //_playlists);
 const selected = ref<SPL | null>(null); //);
 const tracks = ref<STrack[]>(_tracks); //);
 

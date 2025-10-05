@@ -8,7 +8,7 @@ defineProps<{
 
 const emit = defineEmits(['pl-tracks', 'update:selected']);
 
-const { loggedin, loginUrl, doLogout, playlists } = useTidal();
+const { loggedin, login, doLogout, playlists } = useTidal();
 
 const tracks = ref<TTrack[]>([]);
 const newname = ref('');
@@ -33,7 +33,7 @@ const create = () => {
 <template>
   <div v-if="!loggedin">
     <p>please login</p>
-    <a :href="loginUrl">login</a>
+    <button @click="login">login</button>
   </div>
   <div v-else>
     <h2>choose playlist to export to</h2>

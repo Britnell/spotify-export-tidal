@@ -36,34 +36,57 @@ export type TPL = {
 const CLIENT_ID = 'GIcepHVXA3SP67Yi';
 let countryCode = 'DE';
 const interval = 600;
-let token = '';
+let apitoken = '';
 
 const apiClient = createAPIClient(credentialsProvider);
 
 export function useTidal() {
   const token = ref('');
-  const loginUrl = ref('');
   const userid = ref('');
-  const loggedin = computed(() => token.value && userid.value);
+  const loggedin = computed(() => !!token.value && !!userid.value);
   const playlists = ref<TPL[]>([]);
+  const selected = ref<TPL | null>();
+  const tracks = ref<TTrack[]>([]);
 
   onMounted(async () => {
+    try {
+      await starttidal();
+    } catch (e) {
+      console.log(e);
+      // doLogout();
+    }
+  });
+
+  async function starttidal() {
     await init({
       clientId: CLIENT_ID,
       credentialsStorageKey: 'authorizationCode',
-      scopes: ['user.read', 'playlists.read', 'playlists.write'],
     });
 
-    loginUrl.value = await initializeLogin({
-      redirectUri: 'http://localhost:5173/',
-    });
-
-    await handleRedirect();
+    if (window.location.search.length > 0) {
+      await finalizeLogin(window.location.search);
+      window.location.replace('/');
+      return;
+    }
 
     const credentials = await credentialsProvider.getCredentials();
 
     token.value = credentials.token || '';
+    apitoken = token.value;
     userid.value = credentials.userId || '';
+
+    // if (!token.value) {
+    //   return;
+    // }
+
+    // if (!userid.value) {
+    //   const user = await getUser();
+    //   if (user) {
+    //     userid.value = user.id;
+    //   } else {
+    //     return doLogout();
+    //   }
+    // }
 
     if (token.value && userid.value) {
       const res = await getUserPlaylists(userid.value);
@@ -71,7 +94,19 @@ export function useTidal() {
         playlists.value = res.data?.data;
       }
     }
-  });
+  }
+
+  async function login() {
+    await init({
+      clientId: CLIENT_ID,
+      credentialsStorageKey: 'authorizationCode',
+      scopes: ['user.read', 'playlists.read', 'playlists.write'],
+    });
+    const loginUrl = await initializeLogin({
+      redirectUri: 'http://localhost:5173/',
+    });
+    window.open(loginUrl, '_self');
+  }
 
   // watch(loggedin, async (val) => {
   //   //
@@ -80,22 +115,19 @@ export function useTidal() {
   return {
     token,
     loggedin,
-    loginUrl,
+    login,
     doLogout,
     playlists,
+    selected,
+    tracks,
   };
 }
 
-export async function handleRedirect() {
-  if (window.location.search.length > 0) {
-    await finalizeLogin(window.location.search);
-    window.location.replace('/');
-  }
-}
+export async function handleRedirect() {}
 
 export function doLogout() {
   logout();
-  window.location.reload();
+  // window.location.reload();
 }
 
 export const getUser = () =>
@@ -204,9 +236,9 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   });
 }
 
-export const getPlaylistTracks = async (pl: TPL) => {
-  return await getPlaylistTrackIds(pl.id);
-};
+// export const getPlaylistTracks = async (pl: TPL) => {
+//   return await getPlaylistTrackIds(pl.id);
+// };
 
 // const getTracks = async (ids:string[])=>{
 // const tracks = await apiClient.GET('/tracks', {
@@ -220,7 +252,7 @@ export const getPlaylistTracks = async (pl: TPL) => {
 // });
 // }
 
-const getPlaylistTrackIds = async (id: string) => {
+export const getPlaylistTracks = async (id: string) => {
   let allTracks: TTrack[] = [];
   const first = await apiClient.GET('/playlists/{id}/relationships/items', {
     params: {
@@ -231,15 +263,18 @@ const getPlaylistTrackIds = async (id: string) => {
       },
     },
   });
-  if (first.data?.data) {
-    allTracks = first.data.data;
+
+  if (first.data?.included) {
+    allTracks = first.data.included;
   }
+
   let next = first.data?.links?.next;
   while (next) {
     await delay(interval);
     const resp = await tidalApi(next);
-    if (resp.data) {
-      allTracks = allTracks.concat(resp.data);
+
+    if (resp.included) {
+      allTracks = allTracks.concat(resp.included);
     }
     next = resp.links?.next;
   }
@@ -249,13 +284,13 @@ const getPlaylistTrackIds = async (id: string) => {
 const base = 'https://openapi.tidal.com/v2';
 
 const tidalApi = async (path: string) => {
-  if (!token) {
+  if (!apitoken) {
     throw new Error('Not authenticated');
   }
   const response = await fetch(base + path, {
     method: 'get',
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${apitoken}`,
     },
   });
   if (!response.ok) {
