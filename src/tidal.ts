@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   init,
   initializeLogin,
@@ -236,21 +236,25 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   });
 }
 
-// export const getPlaylistTracks = async (pl: TPL) => {
-//   return await getPlaylistTrackIds(pl.id);
-// };
-
-// const getTracks = async (ids:string[])=>{
-// const tracks = await apiClient.GET('/tracks', {
-//   params: {
-//     query: {
-//       countryCode,
-//       include: ['albums', 'artists'],
-//       'filter[id]': ids,
-//     },
-//   },
-// });
-// }
+export const createPlaylist = (name: string) => {
+  return apiClient.POST('/playlists', {
+    params: {
+      query: {
+        countryCode,
+      },
+    },
+    body: {
+      data: {
+        type: 'playlists',
+        attributes: {
+          name,
+          description: 'Created my spotify-tidal migration',
+          accessType: 'UNLISTED',
+        },
+      },
+    },
+  });
+};
 
 export const getPlaylistTracks = async (id: string) => {
   let allTracks: TTrack[] = [];
@@ -268,7 +272,7 @@ export const getPlaylistTracks = async (id: string) => {
   // console.log(first);
 
   if (first.data?.included) {
-    allTracks = first.data.included;
+    allTracks = first.data.included as TTrack[];
   }
 
   let next = first.data?.links?.next;

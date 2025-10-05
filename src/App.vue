@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { addTracksStaggered, findISRCStaggered, type TPL, useTidal, getPlaylistTracks } from './tidal';
+import { addTracksStaggered, findISRCStaggered, type TPL, useTidal, getPlaylistTracks, createPlaylist } from './tidal';
 import { useSpotify, type SPL, type STrack } from './useSpotify';
 
 const spotify = useSpotify();
@@ -40,9 +40,15 @@ const tidalUnselect = () => {
   tidal.tracks.value = [];
 };
 
-const createnew = () => {
+const createnew = async () => {
   const name = newname.value;
-  console.log({ name });
+  const resp = await createPlaylist(name);
+  const newpl = resp.data?.data;
+  if (newpl) {
+    newname.value = '';
+    tidal.playlists.value = [...tidal.playlists.value, newpl];
+    selectTidal(newpl);
+  }
 };
 
 const exportPl = async () => {
@@ -185,7 +191,7 @@ const exportPl = async () => {
         </ul>
 
         <div class="my-8" v-if="notFoundExports.length > 0">
-          <detail>
+          <details>
             <summary>
               <h4>tracks not found:</h4>
             </summary>
@@ -195,7 +201,7 @@ const exportPl = async () => {
                 <span class="ml-4 text-sm text-gray-500">{{ tr.album.release_date }}</span>
               </li>
             </ul>
-          </detail>
+          </details>
           <button>download as csv</button>
         </div>
       </div>
