@@ -35,6 +35,7 @@ export type TPL = {
 const CLIENT_ID = 'GIcepHVXA3SP67Yi';
 let countryCode = 'DE';
 const interval = 600;
+let token = '';
 
 async function initSdk() {
   await init({
@@ -46,11 +47,9 @@ async function initSdk() {
 
 export async function login() {
   await initSdk();
-
   const loginUrl = await initializeLogin({
     redirectUri: 'http://localhost:5173/',
   });
-
   window.open(loginUrl, '_self');
 }
 
@@ -58,6 +57,8 @@ export async function handleRedirect() {
   if (window.location.search.length > 0) {
     await initSdk();
     await finalizeLogin(window.location.search);
+    const credentials = await credentialsProvider.getCredentials();
+    token = credentials.token || '';
     window.location.replace('/');
   }
 }
@@ -70,6 +71,7 @@ export function doLogout() {
 export async function getDecodedToken() {
   await initSdk();
   const credentials = await credentialsProvider.getCredentials();
+  token = credentials.token || '';
   return credentials.token;
 }
 
@@ -147,33 +149,15 @@ export const addTracks = (plid: string, trackids: string[]) => {
   });
 };
 
-/**
- * Adds tracks to a Tidal playlist in staggered chunks.
- * The Tidal API limits adding tracks to 20 per request.
- * This function handles chunking and makes sequential requests with delays.
- *
- * @param plid - The playlist ID.
- * @param trackids - An array of track IDs to add.
- * @returns A promise that resolves when all tracks have been added.
- */
 export async function addTracksStaggered(plid: string, trackids: string[]): Promise<any[]> {
   return staggerReq(trackids, 20, async (chunk: string[]) => {
     const response = await addTracks(plid, chunk);
-    return [response]; // Return the API response as an array
+    return [response];
   });
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * A reusable function for handling staggered chunked API requests.
- * Takes an array of items, chunks them, and processes each chunk with a delay.
- *
- * @param items - Array of items to process
- * @param chunkSize - Size of each chunk (default: 20)
- * @param processChunk - Function that processes a chunk and returns a result or void
- * @returns Promise that resolves to an array of all results (empty if processChunk returns void)
- */
 export async function staggerReq<T, R>(
   items: T[],
   chunkSize: number,
@@ -203,14 +187,6 @@ export async function staggerReq<T, R>(
   return allResults;
 }
 
-/**
- * Fetches tracks from Tidal by their ISRCs in staggered chunks.
- * The Tidal API limits fetching tracks by ISRC to 20 per request.
- * This function handles chunking and makes sequential requests.
- *
- * @param isrcs - An array of ISRC strings.
- * @returns A promise that resolves to an array of all fetched tracks.
- */
 export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   return staggerReq(isrcs, 20, async (chunk: string[]) => {
     const resp = await getIRCS(chunk);
@@ -219,50 +195,17 @@ export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   });
 }
 
-const getPlaylistIds = async (id: string, total: number) => {
-  if (!total) return { data: { data: [] } };
-
-  let allItems: any[] = [];
-  let cursor: string | undefined;
-
-  // Calculate how many requests needed (20 items per request max)
-  const numRequests = Math.ceil(total / 20);
-  const requestIndices = Array.from({ length: numRequests }, (_, i) => i);
-
-  // Use staggerReq to fetch all pages with cursor pagination
-  await staggerReq(requestIndices, 1, async () => {
-    const resp = await apiClient.GET('/playlists/{id}/relationships/items', {
-      params: {
-        path: { id },
-        query: {
-          include: ['items'],
-          countryCode,
-          ...(cursor && { 'page[cursor]': cursor }),
-        },
-      },
-    });
-
-    const items = resp.data?.data || [];
-    allItems = allItems.concat(items);
-
-    // Update cursor for next request
-    cursor = resp.data?.links?.meta?.nextCursor;
-
-    return items;
-  });
-
-  return { data: { data: allItems } };
-};
-
 export const getPlaylistTracks = async (pl: TPL) => {
-  const trackids = await getPlaylistTracksCursor(pl.id);
-  console.log(trackids);
+  const trackids = await getPlaylistTrackIds(pl.id);
+  //
 
-  return [];
+  const resp = await getTracks(trackids);
+
+  return trackids;
 };
-export const getPlaylistTracksCursor = async (id: string) => {
-  let allTracks: TTrack[] = [];
 
+export const getPlaylistTrackIds = async (id: string) => {
+  let allTracks: TTrack[] = [];
   const first = await apiClient.GET('/playlists/{id}/relationships/items', {
     params: {
       path: { id },
@@ -272,11 +215,9 @@ export const getPlaylistTracksCursor = async (id: string) => {
       },
     },
   });
-
   if (first.data?.data) {
     allTracks = first.data.data;
   }
-
   let next = first.data?.links?.next;
   while (next) {
     await delay(interval);
@@ -286,15 +227,12 @@ export const getPlaylistTracksCursor = async (id: string) => {
     }
     next = resp.links?.next;
   }
-
   return allTracks;
 };
 
 const base = 'https://openapi.tidal.com/v2';
 
 const tidalApi = async (path: string) => {
-  const credentials = await credentialsProvider.getCredentials();
-  const token = credentials.token;
   if (!token) {
     throw new Error('Not authenticated');
   }
