@@ -17,7 +17,8 @@ const tidal = useTidal();
 const log = ref<string[]>([]);
 const notFoundExports = ref<STrack[]>([]);
 const newname = ref('');
-// const showExport = ref('');
+const showExport = ref(false);
+const done = ref(false);
 
 const loggedin = computed(() => {
   return spotify.loggedin.value && tidal.loggedin.value;
@@ -47,11 +48,14 @@ const spotifyUnselect = () => {
 
 const selectTidal = async (pl: TPL) => {
   initlog();
+  showExport.value = false;
   tidal.selected.value = pl;
   log.value.push(`loading tidal playlist "${tidal.selected.value.attributes?.name}" ...`);
+
   const tracks = await getPlaylistTracks(pl.id);
   tidal.tracks.value = tracks;
   log.value.push(`loaded  , ${tidal.tracks.value.length} tracks`);
+  showExport.value = true;
 };
 
 const tidalUnselect = () => {
@@ -71,6 +75,7 @@ const createnew = async () => {
 };
 
 const exportPl = async () => {
+  showExport.value = false;
   notFoundExports.value = [];
   if (!tidal.selected.value) {
     return;
@@ -128,12 +133,12 @@ const exportPl = async () => {
       const searchres = await searchTrack(sq);
       const list = parseSearchRes(searchres);
       if (list?.length) {
-        // console.log(list);
+        console.log(list);
         manualsearch.push(list[0]);
         log.value.push(`added closest match `);
       } else {
         notFoundExports.value.push(missing);
-        log.value.push(`track not found : ${q.name} by ${q.art.join(', ')} `);
+        log.value.push(`track not found : ${q.name}, ${q.art.join(', ')} `);
       }
     }
   }
@@ -147,6 +152,13 @@ const exportPl = async () => {
     log.value.push(`found no other tracks`);
   }
   log.value.push(`Done!`);
+  done.value = true;
+};
+
+const startAgain = () => {
+  tidal.selected.value = null;
+  spotify.selected.value = null;
+  done.value = false;
 };
 
 const downloadcsv = () => {
@@ -279,7 +291,9 @@ const downloadcsv = () => {
             {{ line }}
           </li>
         </ul>
-        <button class="button bg-blu-600 mt-2" @click="exportPl">Start Export</button>
+        <button v-if="showExport" class="button bg-blu-600 mt-2" @click="exportPl">Start Export</button>
+
+        <button v-if="done" class="button bg-blu-600 mt-2" @click="startAgain">">migrate another one</button>
 
         <div class="my-8" v-if="notFoundExports.length > 0">
           <details>
