@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import {
   addTracksStaggered,
   findISRCStaggered,
@@ -22,11 +22,16 @@ const loggedin = computed(() => {
   return spotify.loggedin.value && tidal.loggedin.value;
 });
 
-onMounted(() => {
-  // const s =
-});
+const initlog = () => {
+  log.value = [`Exporting "${spotify.selected.value?.name}" playlist with ${spotify.tracks.value.length} tracks`];
+  if (tidal.selected.value) {
+    log.value.push(`loaded "${tidal.selected.value.attributes?.name}" , ${tidal.tracks.value.length} tracks`);
+  }
+};
+
 const selectSpotifyPl = async (pl: SPL) => {
   spotify.selected.value = pl;
+  initlog();
 
   const tracks = await spotify.getPlaylistTracks(pl.id, spotify.token.value);
   spotify.tracks.value = tracks;
@@ -40,9 +45,12 @@ const spotifyUnselect = () => {
 };
 
 const selectTidal = async (pl: TPL) => {
+  initlog();
   tidal.selected.value = pl;
+  log.value.push(`loading tidal playlist "${tidal.selected.value.attributes?.name}" ...`);
   const tracks = await getPlaylistTracks(pl.id);
   tidal.tracks.value = tracks;
+  log.value.push(`loaded  , ${tidal.tracks.value.length} tracks`);
 };
 
 const tidalUnselect = () => {
@@ -66,41 +74,42 @@ const exportPl = async () => {
     return;
   }
 
-  const exportlist = spotify.tracks.value;
-  const existing = tidal.tracks.value;
-  const existingIsrc = existing.map((tr) => tr.attributes?.isrc);
-
   // console.log(' export ', exportlist);
-  // console.log(' import ', existing);
 
-  const filterExisting = exportlist.filter((expo) => !existingIsrc.includes(expo.external_ids.isrc));
+  // * check for duplicates
+  const exportlist = spotify.tracks.value;
+  const existingIsrc = tidal.tracks.value.map((tr) => tr.attributes?.isrc?.toUpperCase());
 
-  const duplicates = exportlist.length - filterExisting.length;
-  log.value = [...log.value, `skipped ${duplicates} tracks already on target playlist`];
-
-  if (filterExisting.length === 0) {
-    log.value = [...log.value, `they're already there. check your tidal playlist and try reloading`];
+  const withoutExisting = exportlist.filter((expo) => !existingIsrc.includes(expo.external_ids.isrc.toUpperCase()));
+  if (withoutExisting.length === 0) {
+    log.value.push(`all tracks already found on target playlist check your tidal playlist and try reloading`);
     return;
   }
+  const duplicates = exportlist.length - withoutExisting.length;
+  log.value.push(`skipping ${duplicates} tracks already on target playlist`);
 
-  const isrcIds = filterExisting.map((tr: STrack) => tr.external_ids.isrc);
+  // * find by isrc
+  const isrcIds = withoutExisting.map((tr: STrack) => tr.external_ids.isrc.toUpperCase());
   const foundIsrcs = await findISRCStaggered(isrcIds);
-  const notFound = filterExisting.filter(
+  const notFound = withoutExisting.filter(
     (tr: STrack) => !foundIsrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc),
   );
   notFoundExports.value = notFound;
 
   if (foundIsrcs.length > 0) {
+    log.value.push(`Found ${foundIsrcs.length} matching tracks on tidal `);
+    log.value.push(`adding tracks to playlist ... `);
     const ids = foundIsrcs.map((tr) => tr.id);
     await addTracksStaggered(tidal.selected.value.id, ids);
-    log.value = [...log.value, `added ${foundIsrcs.length} tracks to target playlist `];
   } else {
-    log.value = [...log.value, `no missing tracks found by isrc`];
+    log.value.push(`no tracks found by isrc`);
   }
 
-  log.value = [...log.value, `${notFound.length} tracks not found on tidal`];
+  log.value.push(`${notFound.length} remaining tracks not found on tidal`);
+  log.value.push(`searching manually ... `);
 
   for (let x = 0; x < 2; x++) {
+    log.value.push(`searching for ${x} of ${notFound.length}`);
     const missing = notFound[x];
     if (missing) {
       const q = {
@@ -111,6 +120,7 @@ const exportPl = async () => {
       const sq = [q.name, q.art].flat().join(' ');
       const searchres = await searchTrack(sq);
       const list = parseSearchRes(searchres);
+      console.log(q);
       console.log(list);
     }
   }
@@ -121,24 +131,6 @@ const downloadcsv = () => {
 
   downloadCsvFile(notFoundExports.value, `${name}-missing tracks`);
 };
-
-watch(
-  [tidal.tracks, spotify.tracks],
-  () => {
-    if (!tidal.selected.value || !spotify.selected.value) {
-      return;
-    }
-
-    log.value = [
-      `Exporting spotify playlist with ${spotify.tracks.value.length} tracks`,
-      `target Tidal playlist currently has ${tidal.tracks.value.length} tracks `,
-      'ready',
-    ];
-  },
-  {
-    deep: true,
-  },
-);
 </script>
 
 <template>
@@ -252,10 +244,13 @@ watch(
           <button class="button sm ml-auto mr-4" @click="tidalUnselect">change</button>
         </p>
       </div>
+    </div>
 
-      <!-- export ! -->
-      <div v-if="tidal.selected.value && spotify.selected.value" class="my-8">
-        <h3 class="h3 mt-4">Log</h3>
+    <div v-if="spotify.selected.value && tidal.selected.value">
+      <h2 class="mt-8 h2 step">Export</h2>
+
+      <div class="px-4 py-3">
+        <!-- <h3 class="h3 mt-4">Log</h3> -->
         <ul class="font-mono p-1 bg-slate-700">
           <li v-for="line in log" :key="line">
             {{ line }}
