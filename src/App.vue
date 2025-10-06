@@ -293,20 +293,27 @@ const downloadcsv = () => {
         </ul>
         <button v-if="showExport" class="button bg-blu-600 mt-2" @click="exportPl">Start Export</button>
 
-        <button v-if="done" class="button bg-blu-600 mt-2" @click="startAgain">">migrate another one</button>
+        <button v-if="done" class="button bg-blu-600 mt-2" @click="startAgain">migrate another one</button>
 
         <div class="my-8" v-if="notFoundExports.length > 0">
-          <details>
-            <summary>
-              <h4 class="h4 inline">tracks not found:</h4>
-            </summary>
-            <ul class="x">
-              <li v-for="tr in notFoundExports" class="my-2" :key="tr.id">
-                <span class="x"> {{ tr.name }} {{ tr.artists.map((a) => a.name).join(', ') }}{{ tr.album.name }}</span>
-                <span class="ml-4 text-sm text-gray-500">{{ tr.album.release_date }}</span>
-              </li>
-            </ul>
-          </details>
+          <h4 class="h4 inline">tracks not found:</h4>
+          <ul class="x">
+            <li v-for="tr in notFoundExports" class="my-2 flex gap-3" :key="tr.id">
+              <span class="x"> {{ tr.name }} </span>
+              <span> {{ tr.artists.map((a) => a.name).join(', ') }}</span>
+              <span>
+                {{ tr.album.name }}
+              </span>
+              <a
+                :href="`https://tidal.com/search?q=${encodeURIComponent(
+                  [tr.name, tr.artists.map((a) => a.name)].flat().join(' '),
+                )}`"
+                target="_blank"
+                class="underline"
+                >search</a
+              >
+            </li>
+          </ul>
           <button class="button" @click="downloadcsv">download as csv</button>
         </div>
       </div>
