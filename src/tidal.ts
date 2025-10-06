@@ -74,19 +74,6 @@ export function useTidal() {
     apitoken = token.value;
     userid.value = credentials.userId || '';
 
-    // if (!token.value) {
-    //   return;
-    // }
-
-    // if (!userid.value) {
-    //   const user = await getUser();
-    //   if (user) {
-    //     userid.value = user.id;
-    //   } else {
-    //     return doLogout();
-    //   }
-    // }
-
     if (token.value && userid.value) {
       const res = await getUserPlaylists(userid.value);
       if (res.data) {
@@ -111,11 +98,8 @@ export function useTidal() {
     logout();
     token.value = '';
     apitoken = '';
-    // window.location.reload();
+    window.location.reload();
   }
-  // watch(loggedin, async (val) => {
-  //   //
-  // });
 
   return {
     token,
@@ -158,6 +142,8 @@ export const searchTrack = async (searchTerm: string) => {
     },
   });
 
+  await delay(interval);
+
   const ids = search.data?.included?.map((it) => it.id);
 
   if (!ids) return null;
@@ -171,6 +157,7 @@ export const searchTrack = async (searchTerm: string) => {
       },
     },
   });
+  await delay(interval);
 
   return tracks.data;
 };

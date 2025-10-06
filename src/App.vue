@@ -17,13 +17,14 @@ const tidal = useTidal();
 const log = ref<string[]>([]);
 const notFoundExports = ref<STrack[]>([]);
 const newname = ref('');
+// const showExport = ref('');
 
 const loggedin = computed(() => {
   return spotify.loggedin.value && tidal.loggedin.value;
 });
 
 const initlog = () => {
-  log.value = [`Exporting "${spotify.selected.value?.name}" playlist with ${spotify.tracks.value.length} tracks`];
+  log.value = [`Exporting "${spotify.selected.value?.name}" playlist, ${spotify.tracks.value.length} tracks`];
   if (tidal.selected.value) {
     log.value.push(`loaded "${tidal.selected.value.attributes?.name}" , ${tidal.tracks.value.length} tracks`);
   }
@@ -70,10 +71,10 @@ const createnew = async () => {
 };
 
 const exportPl = async () => {
+  notFoundExports.value = [];
   if (!tidal.selected.value) {
     return;
   }
-
   // console.log(' export ', exportlist);
 
   // * check for duplicates
@@ -88,16 +89,15 @@ const exportPl = async () => {
   const duplicates = exportlist.length - withoutExisting.length;
   log.value.push(`skipping ${duplicates} tracks already on target playlist`);
 
+  log.value.push(`importing ${withoutExisting.length} tracks`);
+
   // * find by isrc
+  log.value.push(`searching for tracks by isrc... `);
   const isrcIds = withoutExisting.map((tr: STrack) => tr.external_ids.isrc.toUpperCase());
   const foundIsrcs = await findISRCStaggered(isrcIds);
-  const notFound = withoutExisting.filter(
-    (tr: STrack) => !foundIsrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc),
-  );
-  notFoundExports.value = notFound;
 
   if (foundIsrcs.length > 0) {
-    log.value.push(`Found ${foundIsrcs.length} matching tracks on tidal `);
+    log.value.push(`Found ${foundIsrcs.length} matching tracks by isrc `);
     log.value.push(`adding tracks to playlist ... `);
     const ids = foundIsrcs.map((tr) => tr.id);
     await addTracksStaggered(tidal.selected.value.id, ids);
@@ -105,12 +105,18 @@ const exportPl = async () => {
     log.value.push(`no tracks found by isrc`);
   }
 
-  log.value.push(`${notFound.length} remaining tracks not found on tidal`);
+  const noIsrc = withoutExisting.filter(
+    (tr: STrack) => !foundIsrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc),
+  );
+
+  log.value.push(`${noIsrc.length} tracks not found via isrc`);
+
   log.value.push(`searching manually ... `);
 
-  for (let x = 0; x < 2; x++) {
-    log.value.push(`searching for ${x} of ${notFound.length}`);
-    const missing = notFound[x];
+  let manualsearch = [];
+  for (let x = 0; x < noIsrc.length; x++) {
+    log.value.push(`searching for ${x} of ${noIsrc.length}`);
+    const missing = noIsrc[x];
     if (missing) {
       const q = {
         name: missing.name,
@@ -118,12 +124,29 @@ const exportPl = async () => {
         alb: missing.album.name,
       };
       const sq = [q.name, q.art].flat().join(' ');
+      console.log(q);
       const searchres = await searchTrack(sq);
       const list = parseSearchRes(searchres);
-      console.log(q);
-      console.log(list);
+      if (list?.length) {
+        // console.log(list);
+        manualsearch.push(list[0]);
+        log.value.push(`added closest match `);
+      } else {
+        notFoundExports.value.push(missing);
+        log.value.push(`track not found : ${q.name} by ${q.art.join(', ')} `);
+      }
     }
   }
+
+  if (manualsearch.length > 0) {
+    log.value.push(`Found ${manualsearch.length} tracks with manual search `);
+    const ids = manualsearch.map((it) => it?.id).filter((it) => it);
+    await addTracksStaggered(tidal.selected.value.id, ids as string[]);
+    log.value.push(`added tracks to playlist `);
+  } else {
+    log.value.push(`found no other tracks`);
+  }
+  log.value.push(`Done!`);
 };
 
 const downloadcsv = () => {
