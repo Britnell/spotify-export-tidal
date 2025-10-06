@@ -1,8 +1,23 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-blu-600: oklch(0.423 0.1567 268.41);
+  --color-blu-700: oklch(0.3612 0.1567 268.41);
+  --color-blu-800: oklch(0.298 0.1567 268.41);
+  --color-blu-900: oklch(0.2467 0.1567 268.41);
+
+  --color-spotify: #1ed760;
+}
 @layer base {
+  body {
+    background: oklch(0.1397 0.074 268.41);
+    color: #fff;
+  }
   button {
     cursor: pointer;
+  }
+  input {
+    @apply rounded;
   }
 
   body {
@@ -12,18 +27,22 @@
   .h2,
   .h3,
   .h4 {
-    font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT',
-      'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif;
-    /* font-family: Avenir, Montserrat, Corbel, 'URW Gothic', source-sans-pro, sans-serif; */
+    /* font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif; */
+    font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed,
+      sans-serif;
   }
   .h2 {
-    @apply text-2xl font-bold;
+    @apply text-2xl;
   }
   .h3 {
-    @apply text-xl font-semibold;
+    @apply text-xl;
   }
   .h4 {
-    @apply text-lg font-semibold;
+    @apply text-lg;
+  }
+  p,
+  li {
+    @apply text-gray-200;
   }
 
   .button {
@@ -33,9 +52,14 @@
 
 @layer components {
   .step {
-    @apply bg-blue-100 rounded-md px-2 py-1;
+    /* background: var(--color-blu-800); */
+    @apply rounded-md px-2 py-1 bg-slate-800;
+  }
+  .button {
+    background: var(--color-blu-700);
   }
   .button.sm {
     @apply text-sm px-1;
+    background: var(--color-blu-800);
   }
 }

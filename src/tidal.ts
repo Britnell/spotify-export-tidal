@@ -53,7 +53,6 @@ export function useTidal() {
       await starttidal();
     } catch (e) {
       console.log(e);
-      // doLogout();
     }
   });
 
@@ -108,6 +107,12 @@ export function useTidal() {
     window.open(loginUrl, '_self');
   }
 
+  function doLogout() {
+    logout();
+    token.value = '';
+    apitoken = '';
+    // window.location.reload();
+  }
   // watch(loggedin, async (val) => {
   //   //
   // });
@@ -124,11 +129,6 @@ export function useTidal() {
 }
 
 export async function handleRedirect() {}
-
-export function doLogout() {
-  logout();
-  // window.location.reload();
-}
 
 export const getUser = () =>
   apiClient.GET('/users/me').then((res) => {

@@ -147,94 +147,121 @@ watch(
   </header>
   <p></p>
 
-  <main class="max-w-[600px] mx-auto space-y-2">
-    <div class="x">
-      <h2 class="h2 step">1. login</h2>
+  <main class="max-w-[600px] px-2 mx-auto">
+    <div class="mt-10">
+      <h2 class="h2 step mb-2">login</h2>
       <p v-if="!loggedin">
         Questions before you give access?
-        <a href="/#faq">read our FAQ</a>
+        <a href="/#faq" class="underline">read our FAQ</a>
       </p>
+    </div>
 
+    <div class="px-4 py-2" :class="loggedin ? 'space-y-2' : 'space-y-8'">
+      <!-- Spotify login -->
       <div v-if="!spotify.loggedin.value">
-        <h3 class="h3">connect spotify</h3>
-        <p>please login spotify</p>
-        <a :href="spotify.href">login</a>
+        <h3 class="h4 flex gap-2">1. Connect your spotify account to export your playlists</h3>
+        <a
+          :href="spotify.href"
+          class="mt-2 bg-spotify rounded-full px-3 py-1 text-black font-semibold block mx-auto w-min whitespace-nowrap"
+        >
+          login to spotify</a
+        >
       </div>
-      <div v-else>
-        <!-- spotify logout? -->
+      <div v-else class="grid grid-cols-2 place-items-start">
+        <p class="">✅ Spotify connected</p>
+        <button
+          :href="spotify.href"
+          class="button bg-spotify rounded-full text-black font-semibold"
+          @click="spotify.clearToken"
+        >
+          logout spotify
+        </button>
       </div>
-      <div v-if="!tidal.loggedin.value">
-        <h3 class="h3">connect tidal</h3>
-        <button @click="tidal.login">login</button>
-      </div>
-      <div v-else>
-        <!-- logout tidal -->
+
+      <!-- tidal login -->
+      <div v-if="spotify.loggedin.value">
+        <div v-if="!tidal.loggedin.value">
+          <h3 class="h4">2. connect your tidal account you want to import playlists to</h3>
+          <button
+            class="mt-2 bg-black rounded-full px-3 py-1 border border-white block mx-auto w-min whitespace-nowrap"
+            @click="tidal.login"
+          >
+            login to tidal
+          </button>
+        </div>
+        <div v-else class="grid grid-cols-2 place-items-start">
+          <p class="">✅ Tidal connected</p>
+          <button :href="spotify.href" class="button bg-black rounded-full border border-white" @click="tidal.doLogout">
+            logout tidal
+          </button>
+        </div>
       </div>
     </div>
 
-    <div v-if="loggedin">
-      <h2 class="h2 step">2. select playlist</h2>
-
+    <h2 class="mt-8 h2 step">select playlist</h2>
+    <div v-if="loggedin" class="px-4 py-2">
       <!-- Select spotify -->
-      <div class="x my-4">
-        <div v-if="!spotify.selected.value">
-          <h3 class="h3">select spotify playlist to export</h3>
-          <ul class="my-4 max-h-[75vh] overflow-auto">
-            <li v-for="pl in spotify.playlists.value" :key="pl.id">
-              {{ pl.name }}
-              <span class="x text-sm text-gray-400"> {{ pl.tracks.total }} tracks </span>
-              <button class="button sm" @click="selectSpotifyPl(pl)">select</button>
-            </li>
-          </ul>
-        </div>
-        <div v-else>
-          <h3 class="h3">Exporting spotify :</h3>
-          <p class="flex gap-4">
-            {{ spotify.selected.value.name }}
-            <span class="text-sm text-gray-400">{{ spotify.selected.value.tracks.total }} tracks</span>
-            <button class="button sm" @click="spotifyUnselect">change</button>
-          </p>
-        </div>
+      <div v-if="!spotify.selected.value">
+        <h3 class="h4">3. select spotify playlist to export</h3>
+        <ul class="my-4 max-h-[60vh] overflow-auto ml-4">
+          <li
+            v-for="pl in spotify.playlists.value"
+            :key="pl.id"
+            class="flex gap-3 rounded hover:bg-slate-800/60 px-1 py-0.5"
+          >
+            {{ pl.name }}
+            <span class="x text-sm text-gray-400"> {{ pl.tracks.total }} tracks </span>
+            <button class="button sm ml-auto mr-4" @click="selectSpotifyPl(pl)">select</button>
+          </li>
+        </ul>
       </div>
 
+      <p v-else class="flex items-center gap-4">
+        <span class="x">Exporting :</span>
+        "{{ spotify.selected.value.name }}"
+        <span class="text-sm text-gray-400">{{ spotify.selected.value.tracks.total }} tracks</span>
+        <button class="button sm ml-auto mr-4" @click="spotifyUnselect">change</button>
+      </p>
+
       <!-- select Tidal -->
-      <div class="x my-4" v-if="spotify.selected.value">
-        <div v-if="!tidal.selected.value">
-          <h3 class="h3">select tidal Playlist to import to</h3>
-          <ul>
-            <li v-for="pl in tidal.playlists.value" :key="pl.id" class="flex gap-2">
+      <div v-if="spotify.selected.value">
+        <div class="mt-4" v-if="!tidal.selected.value">
+          <h3 class="h4">4. select tidal Playlist to import to</h3>
+          <ul class="my-4 pl-4 max-h-[60vh] overflow-auto">
+            <li
+              v-for="pl in [...tidal.playlists.value, ...tidal.playlists.value, ...tidal.playlists.value]"
+              :key="pl.id"
+              class="flex gap-2 items-center px-2 py-0.5 rounded hover:bg-slate-800/60"
+            >
               "{{ pl.attributes?.name }}"
               <span class="x text-gray-400 text-sm">{{ pl.attributes?.numberOfItems }} tracks</span>
-              <button class="button sm" @click="selectTidal(pl)">select</button>
+              <button class="ml-auto mr-2 button sm" @click="selectTidal(pl)">select</button>
             </li>
           </ul>
-          <h4 class="h4">or create new</h4>
-          <div class="x">
+          <h3 class="h4">5. or create new one</h3>
+          <div class="px-3 flex items-center gap-2">
             <label for="newname">Name</label>
             <input id="newname" v-model="newname" class="border p-1" />
-            <button @click="createnew">create</button>
+            <button class="button" @click="createnew">create</button>
           </div>
         </div>
-        <div v-else>
-          <h3 class="h3">importing Tidal :</h3>
-          <p class="x">
-            "{{ tidal.selected.value.attributes?.name }}"
-            <span class="x text-sm text-gray-400"> {{ tidal.selected.value.attributes?.numberOfItems }} tracks </span>
-            <button class="button sm" @click="tidalUnselect">change</button>
-          </p>
-        </div>
+        <p v-else class="flex gap-4 items-center">
+          <span> Importing: </span>
+          "{{ tidal.selected.value.attributes?.name }}"
+          <span class="x text-sm text-gray-400"> {{ tidal.selected.value.attributes?.numberOfItems }} tracks </span>
+          <button class="button sm ml-auto mr-4" @click="tidalUnselect">change</button>
+        </p>
       </div>
 
       <!-- export ! -->
       <div v-if="tidal.selected.value && spotify.selected.value" class="my-8">
-        <button class="button bg-blue-400" @click="exportPl">Start Export</button>
-
         <h3 class="h3 mt-4">Log</h3>
-        <ul class="font-mono p-1 bg-gray-100">
+        <ul class="font-mono p-1 bg-slate-700">
           <li v-for="line in log" :key="line">
             {{ line }}
           </li>
         </ul>
+        <button class="button bg-blu-600 mt-2" @click="exportPl">Start Export</button>
 
         <div class="my-8" v-if="notFoundExports.length > 0">
           <details>
