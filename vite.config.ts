@@ -1,16 +1,17 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), cloudflare()],
   build: {
     rollupOptions: {
       input: {
         index: './index.html',
-        app: './app.html'
-      }
-    }
-  }
+        app: './app.html',
+      },
+    },
+  },
 });
