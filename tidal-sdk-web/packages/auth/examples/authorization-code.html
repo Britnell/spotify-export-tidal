@@ -1,0 +1,60 @@
+<html>
+
+<head>
+  <link href="shared.css" rel="stylesheet" />
+  <style>
+    #getUserBtn,
+    #forceRefreshBtn {
+      margin-top: 10px;
+      display: none;
+    }
+
+    #forceRefreshBtn {
+      max-width: 300px;
+    }
+
+    #searchField {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="../">Back to all examples</a>
+  <h1>Authorization code</h1>
+  <p>
+    This example showcases how to login through login.tidal.com and get redirected back to your app.
+    You need a properly configured clientId, which is tied to a secure redirect uri.
+
+    Once you are logged in you'll find some buttons to check how tokens are fetched.
+  </p>
+
+
+  <form id="authorizationCodeForm">
+    <label>
+      <span>Client Id</span>
+      <input type="text" name="clientId" required />
+    </label>
+    <label>
+      <span>Redirect url</span>
+      <input type="text" name="redirectUrl" required />
+    </label>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="userInfo"></div>
+
+  <button id="logoutBtn">Logout</button>
+  <button id="forceRefreshBtn">Force Refresh (sub status)</button>
+
+  <label>
+    <input type="search" name="search" placeholder="search for artists" id="searchField" />
+  </label>
+
+  <ul id="searchResults"></ul>
+
+  <script type="module" src="./authorization-code.js"></script>
+</body>
+
+</html>
