@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
+  --color-blu-500: oklch(0.423 0.1567 268.41);
   --color-blu-600: oklch(0.423 0.1567 268.41);
   --color-blu-700: oklch(0.3612 0.1567 268.41);
   --color-blu-800: oklch(0.298 0.1567 268.41);
@@ -8,6 +9,14 @@
 
   --color-spotify: #1ed760;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  font-family: system-ui, sans-serif;
+}
+
 @layer base {
   body {
     background: oklch(0.1397 0.074 268.41);
@@ -20,10 +29,7 @@
     @apply rounded;
   }
 
-  body {
-    font-family: system-ui, sans-serif;
-  }
-
+  .h1,
   .h2,
   .h3,
   .h4,
@@ -31,6 +37,9 @@
     /* font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif; */
     font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed,
       sans-serif;
+  }
+  .h1 {
+    @apply text-4xl;
   }
   .h2 {
     @apply text-2xl;
@@ -44,6 +53,12 @@
   p,
   li {
     @apply text-gray-200;
+  }
+
+  p a,
+  ul a,
+  li a {
+    text-decoration: underline;
   }
 
   .button {
@@ -64,4 +79,39 @@
     @apply text-sm px-1;
     background: var(--color-blu-800);
   }
+}
+
+/* CSS Kevin content grid  */
+
+.content-grid {
+  --padding-inline: 1rem;
+  --content-max-width: 60ch;
+  --breakout-max-width: 1200px;
+
+  --breakout-size: calc((var(--breakout-max-width) - var(--content-max-width)) / 2);
+
+  display: grid;
+  grid-template-columns:
+    [full-width-start] minmax(var(--padding-inline), 1fr)
+    [breakout-start] minmax(0, var(--breakout-size))
+    [content-start] min(100% - (var(--padding-inline) * 2), var(--content-max-width))
+    [content-end]
+    minmax(0, var(--breakout-size)) [breakout-end]
+    minmax(var(--padding-inline), 1fr) [full-width-end];
+}
+
+.content-grid > :not(.breakout, .fullwidth),
+.fullwidth > :not(.breakout, .fullwidth) {
+  grid-column: content;
+}
+
+.content-grid > .breakout {
+  grid-column: breakout;
+}
+
+.content-grid > .fullwidth {
+  grid-column: full-width;
+
+  display: grid;
+  grid-template-columns: inherit;
 }

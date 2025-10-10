@@ -33,6 +33,7 @@ const initlog = () => {
 
 const selectSpotifyPl = async (pl: SPL) => {
   spotify.selected.value = pl;
+  newname.value = pl.name;
   initlog();
 
   const tracks = await spotify.getPlaylistTracks(pl.id, spotify.token.value);
@@ -167,10 +168,9 @@ const downloadcsv = () => {
   downloadCsvFile(notFoundExports.value, `${name}-missing tracks`);
 };
 </script>
-
 <template>
   <header>
-    <span>Spotify playlist exporteur international</span>
+    <span class="text-xl">Spo-Ti-Export</span>
   </header>
   <p></p>
 
@@ -253,24 +253,28 @@ const downloadcsv = () => {
       <!-- select Tidal -->
       <div v-if="spotify.selected.value">
         <div class="mt-4" v-if="!tidal.selected.value">
-          <h3 class="h4">4. select tidal Playlist to import to</h3>
-          <ul class="my-4 pl-4 max-h-[60vh] overflow-auto">
-            <li
-              v-for="pl in [...tidal.playlists.value, ...tidal.playlists.value, ...tidal.playlists.value]"
-              :key="pl.id"
-              class="flex gap-2 items-center px-2 py-0.5 rounded hover:bg-slate-800/60"
-            >
-              "{{ pl.attributes?.name }}"
-              <span class="x text-gray-400 text-sm">{{ pl.attributes?.numberOfItems }} tracks</span>
-              <button class="ml-auto mr-2 button sm" @click="selectTidal(pl)">select</button>
-            </li>
-          </ul>
-          <h3 class="h4">5. or create new one</h3>
+          <h3 class="h4">4. create new playlist</h3>
           <div class="px-3 flex items-center gap-2">
             <label for="newname">Name</label>
             <input id="newname" v-model="newname" class="border p-1" />
             <button class="button" @click="createnew">create</button>
           </div>
+          <details>
+            <summary>
+              <h3 class="h4 inline">or select existing Playlist to import to</h3>
+            </summary>
+            <ul class="my-4 pl-4 max-h-[50vh] overflow-auto">
+              <li
+                v-for="pl in [...tidal.playlists.value, ...tidal.playlists.value, ...tidal.playlists.value]"
+                :key="pl.id"
+                class="flex gap-2 items-center px-2 py-0.5 rounded hover:bg-slate-800/60"
+              >
+                "{{ pl.attributes?.name }}"
+                <span class="x text-gray-400 text-sm">{{ pl.attributes?.numberOfItems }} tracks</span>
+                <button class="ml-auto mr-2 button sm" @click="selectTidal(pl)">select</button>
+              </li>
+            </ul>
+          </details>
         </div>
         <p v-else class="flex gap-4 items-center">
           <span> Importing: </span>

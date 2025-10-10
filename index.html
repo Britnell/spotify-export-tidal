@@ -6,30 +6,171 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>spotify-export</title>
+  <link rel="stylesheet" href="./src/style.css" />
 </head>
 
 <body style="background: oklch(0.1397 0.074 268.41); color: #fff;">
-  <link rel="stylesheet" href="./src/style.css" />
-  <h1>Spotify to Tidal Export</h1>
-  <h2>Move your splotify playlists to Tidal for free</h2>
-  <p>yes thats right, this is free & open source</p>
+  <header class="content-grid py-4 ">
+    <div class="flex justify-between">
+      <span class="text-xl">Spo-Ti-Export</span>
+      <nav>
+        <ul class="flex gap-2">
+          <li>
+            <a href="#Why">Why</a>
+          </li>
+          <li>
+            <a href="#FAQ">FAQ</a>
+          </li>
+          <li>A</li>
+          <li>A</li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-  <div>
-    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, quasi deserunt? Id maiores enim dolor natus
-      tenetur repellat similique tempora odit delectus possimus et, impedit aliquam alias est a. Error.</p>
-    <a href="/app">export tool</a>
-  </div>
-  <p>
-    How? What does that mean? >> <a href="#faq">FAQ</a>
-  </p>
+  <main class="content-grid">
+    <div class="mt-20 mb-8">
+      <h1 class=" h1 text-center ">
+        Transfer your Playlists <br>
+        from Spotify to Tidal <br>
+        - Free & Open Source
+      </h1>
+      <div class="my-4 flex gap-6 items-center justify-center">
+        <img src="/spotify.png" class=" h-10" alt="spotify logo" />
+        <svg width="52" height="52" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+          aria-label="arrow pointing to right">
+          <path fill="white" d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2zm10-4h2v2h-2zm0 0h-2V5h2zm0 10h2v-2h-2zm0 0h-2v2h2z" />
+        </svg>
+        <img src="/tidal.svg" class="  h-6" alt="tidal logo" />
+      </div>
+    </div>
+
+    <div class="x flex justify-center mb-12">
+      <a href="/app" class=" bg-blu-500 rounded-full w-[220px] py-1 text-lg text-center">
+        Let's go!
+      </a>
+    </div>
+    <div class="mb-12 flex gap-6 items-center">
+      <span class=" text-[4rem] px-4">
+        🧳
+      </span>
+      <div>
+        <h2 class="h2 mb-2 text-pretty">Export your spotify playlists, and import them into tidal</h2>
+        <p class=" text-lg text-pretty">For those wanting to leave Spotify for Tidal, take your playlists with you!</p>
+      </div>
+    </div>
+
+    <div class="fullwidth bg-blu-500 py-8">
+      <div>
+        <h2 class="h2 mb-3" id="Why">Why</h2>
+        <div class=" text-xl ">
+          <p class=" block mb-2">
+            Unlike other migration tools this is free, i built it for myself and for others to use.
+          </p>
+          <p class="x">
+            Because your playlists are yours, you should keep them wherever you go, and not have to pay
+          </p>
+          <span class="x block text-center mt-4 text-4xl">
+            🎶🎹🎻📻🎸🕺 <br>
+            🥁🎷💃🎤🪉🎧 <br>
+            🪈🪇𝄞🎺🪩🪗🪕
+            <!-- 👂 -->
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="x my-8 space-y-6" id="FAQ">
+      <h2 class="h1">FAQ</h2>
+
+      <div>
+        <h3 class="h3">How does it work ❓</h3>
+        <p class="x">
+          Using the
+          <a href="https://developer.spotify.com/documentation/web-api">spotify</a>
+          and
+          <a href="https://developer.tidal.com/documentation/api-sdk/api-sdk-overview">tidal</a>
+          web api, which are free to use.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="h3 mb-2">Let's talk about trust 🤝</h3>
+        <p class="x ml-3">
+        <ul class=" list-disc pl-3">
+          <li>
+            When giving api access it specifies which rights you are giving the app. This also counts for other apps
+            you use on the internet, check what rights you give them and if you trust them with that access
+          </li>
+          <li>
+            Spotify only needs read access to your playlists, as we are only exporting them. So nothing can happen
+            here
+          </li>
+          <li>
+            Tidal needs Write access, in order to create new playlists and add new items
+          </li>
+          <li>
+            The advantage of doing this in a client side app, is that your authentication tokens don't go anywhere. They
+            aren't sent or stored anywhere
+          </li>
+          <li>
+            Plus this is open-source - you can see
+            <a href="https://github.com/Britnell/youtube-doom-blocker-extension">
+              all the code here
+            </a>
+          </li>
+          <li>
+            If there are any problems just
+            <a href="https://github.com/Britnell/youtube-doom-blocker-extension/issues">
+              file an issue
+            </a>
+          </li>
+        </ul>
+        </p>
+      </div>
 
 
-  <div id="faq">
-    <details>
-      <summary>What?</summary>
-      <p>thats why</p>
-    </details>
-  </div>
+      <div>
+        <h3 class="h3 mb-2">Why does it not find all the songs? 🔬</h3>
+        <p class="x ml-3">
+          Different reasons, some songs just aren't on Tidal. Also were using <a
+            href="https://en.wikipedia.org/wiki/International_Standard_Recording_Code">ISRC codes</a> to look up the
+          songs, but sometimes Tidal still picks out some version on another album. <br>
+          I added a custom search for songs not found this way, but that is slower. Still some songs can be found this
+          way
+        </p>
+        <p>
+
+        </p>
+      </div>
+
+      <div>
+        <h3 class="h3 mb-2">Why is it so slow? 🐢</h3>
+        <p class="x ml-3">
+          The tidal api limits how many requests we can make per second, so we need to go slow to not overstep these
+          limits. Tidal also only allows 20 items per request, so we can migrate just 20 songs at a time...
+        </p>
+      </div>
+
+
+    </div>
+
+    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, quasi deserunt? Id maiores enim dolor
+      natus
+      tenetur repellat similique tempora odit delectus possimus et, impedit aliquam alias est a. #
+    </p>
+    <p>
+      How? What does that mean? >> <a href="#faq">FAQ</a>
+    </p>
+
+
+    <div id="faq">
+      <details>
+        <summary>What?</summary>
+        <p>thats why</p>
+      </details>
+    </div>
+  </main>
   <!-- <div id="app"></div>
     <script type="module" src="/src/main.ts"></script> -->
 </body>
