@@ -14,18 +14,18 @@
     <div class="flex justify-between">
       <span class="text-xl">Spo-Ti-Export</span>
       <nav>
-        <ul class="flex gap-2">
+        <ul class="flex gap-2 font-mono font-bold">
           <li>
-            <a href="#About">About</a>
+            <a class=" no-underline hover:underline px-2 py-2 " href="#About">About</a>
           </li>
           <li>
-            <a href="#FAQ">FAQ</a>
+            <a class=" no-underline hover:underline px-2 py-2 " href="#FAQ">FAQ</a>
           </li>
+          <!-- <li>
+            <a class=" no-underline hover:underline px-2 py-2 " href="#Support">Support</a>
+          </li> -->
           <li>
-            <a href="#Support">Support</a>
-          </li>
-          <li>
-            <a href="/App">App</a>
+            <a class=" no-underline hover:underline px-2 py-2 " href="/App">App</a>
           </li>
         </ul>
       </nav>
@@ -33,29 +33,29 @@
   </header>
 
   <main class="content-grid">
-    <div class="mt-20 mb-8">
+    <div class="mt-20 mb-20">
       <h1 class=" h1 text-center ">
         Transfer your Playlists <br>
         from Spotify to Tidal <br>
-        <span class="x italic mt-3 block ">
+        <span class="x italic mt-3 block">
           Free & Open Source
         </span>
       </h1>
-      <div class="my-4 flex gap-6 items-center justify-center">
+      <div class="my-10 flex gap-2 sm:gap-6 items-center justify-center flex-col sm:flex-row">
         <img src="/spotify.png" class=" h-10" alt="spotify logo" />
         <svg width="52" height="52" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-          aria-label="arrow pointing to right">
+          class="  rotate-90 sm:rotate-0" aria-label="arrow pointing to right">
           <path fill="white" d="M4 11v2h12v2h2v-2h2v-2h-2V9h-2v2zm10-4h2v2h-2zm0 0h-2V5h2zm0 10h2v-2h-2zm0 0h-2v2h2z" />
         </svg>
         <img src="/tidal.svg" class="  h-6" alt="tidal logo" />
       </div>
+      <div class="x flex justify-center">
+        <a href="/app" class=" bg-blu-600 rounded-full w-[220px] py-1 text-lg text-center">
+          Let's go!
+        </a>
+      </div>
     </div>
 
-    <div class="x flex justify-center mb-12">
-      <a href="/app" class=" bg-blu-600 rounded-full w-[220px] py-1 text-lg text-center">
-        Let's go!
-      </a>
-    </div>
     <div class="mb-12 flex gap-6 items-center">
       <span class=" text-[4rem] px-4">
         🧳
@@ -119,9 +119,9 @@
             aren't sent or stored anywhere
           </li>
           <li>
-            Plus this is open-source - you can see
+            Plus this is open-source - you can
             <a href="https://github.com/Britnell/youtube-doom-blocker-extension">
-              all the code here
+              find the code here
             </a>
           </li>
           <li>
@@ -158,7 +158,11 @@
       </div>
     </div>
 
-    <!-- <div class=" my-12">
+    <!-- <div>
+      Bluesky likes
+    </div> -->
+
+    <!-- <div class=" my-12" id='Support'>
       <h2 class="h2">Support</h2>
       <p class="x">
         this is completely free, but if you appreciate the service you can
@@ -172,11 +176,12 @@
     <div class=" mb-1">
       <span class="x font-heading">Spo-Ti-Export</span>
     </div>
-    <div class="x flex justify-between">
+    <div class="x flex justify-between font-mono">
       <p class="italic">the free Spotify Exporter</p>
       <p>
+        open source:
         <a href="https://github.com/Britnell/youtube-doom-blocker-extension">
-          open source git repo
+          git repo
         </a>
       </p>
     </div>

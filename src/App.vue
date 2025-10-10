@@ -169,8 +169,23 @@ const downloadcsv = () => {
 };
 </script>
 <template>
-  <header>
-    <span class="text-xl">Spo-Ti-Export</span>
+  <header class="content-grid py-4">
+    <div class="flex justify-between">
+      <span class="text-xl">Spo-Ti-Export</span>
+      <nav>
+        <ul class="flex gap-2 font-mono font-bold">
+          <li>
+            <a class="no-underline hover:underline px-2 py-2" href="/">Home</a>
+          </li>
+          <li>
+            <a class="no-underline hover:underline px-2 py-2" href="/#FAQ">FAQ</a>
+          </li>
+          <!-- <li>
+            <a class=" no-underline hover:underline px-2 py-2 " href="/#Support">Support</a>
+          </li> -->
+        </ul>
+      </nav>
+    </div>
   </header>
   <p></p>
 
