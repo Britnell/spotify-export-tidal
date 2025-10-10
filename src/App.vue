@@ -174,13 +174,13 @@ const downloadcsv = () => {
       <span class="text-2xl">Spo-Ti-Export</span>
       <nav>
         <ul class="flex gap-2 font-mono font-bold">
-          <li>
+          <li class="opacity-100">
             <a class="no-underline hover:underline px-2 py-2" href="/">Home</a>
           </li>
-          <li>
+          <li class="opacity-100">
             <a class="no-underline hover:underline px-2 py-2" href="/#FAQ">FAQ</a>
           </li>
-          <!-- <li>
+          <!-- <li class="opacity-100">
             <a class=" no-underline hover:underline px-2 py-2 " href="/#Support">Support</a>
           </li> -->
         </ul>
@@ -190,6 +190,7 @@ const downloadcsv = () => {
   <p></p>
 
   <main class="max-w-[600px] px-2 mx-auto">
+    <h1 class="h2 text-center my-8">Transfer your Playlists from Spotify to Tidal</h1>
     <div class="mt-10">
       <h2 class="h2 step mb-2">login</h2>
       <p v-if="!loggedin">
@@ -240,8 +241,8 @@ const downloadcsv = () => {
       </div>
     </div>
 
-    <h2 class="mt-8 h2 step">select playlist</h2>
     <div v-if="loggedin" class="px-4 py-2">
+      <h2 class="mt-8 h2 step">select playlist</h2>
       <!-- Select spotify -->
       <div v-if="!spotify.selected.value">
         <h3 class="h4">3. select spotify playlist to export</h3>
