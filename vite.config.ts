@@ -8,7 +8,10 @@ export default defineConfig({
   plugins: [vue(), tailwindcss(), cloudflare()],
   build: {
     rollupOptions: {
-      input: './app.html',
+      input: {
+        main: './index.html',
+        app: './app.html',
+      },
     },
   },
 });
