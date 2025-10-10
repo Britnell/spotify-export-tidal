@@ -1,11 +1,8 @@
 {
   "name": "cloudflare-vite",
   "compatibility_date": "2025-04-03",
-  "main": "./dist/cloudflare_vite/index.js",
+  // "main": "./dist/cloudflare_vite/index.js",
   "assets": {
     "directory": "./dist/client"
-  },
-  "routes": [
-    { "pattern": "*/api/*" }
-  ]
+  }
 }
