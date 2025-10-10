@@ -171,7 +171,7 @@ const downloadcsv = () => {
 <template>
   <header class="content-grid py-4">
     <div class="flex justify-between">
-      <span class="text-xl">Spo-Ti-Export</span>
+      <span class="text-2xl">Spo-Ti-Export</span>
       <nav>
         <ul class="flex gap-2 font-mono font-bold">
           <li>

@@ -40,7 +40,6 @@ body {
   .h3,
   .h4,
   header span {
-    /* font-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa, Manjari, 'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif; */
     font-family: var(--font-heading);
   }
   .h1 {
@@ -57,7 +56,7 @@ body {
   }
   p,
   li {
-    @apply text-gray-200;
+    @apply opacity-80;
   }
 
   p a,
