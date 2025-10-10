@@ -1,0 +1,2 @@
+packages:
+  - 'tidal-sdk-web/packages/*'

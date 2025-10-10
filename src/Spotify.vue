@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { _playlists, _selected, _tracks } from './dummy';
 import { useSpotify, type SPL, type STrack } from './useSpotify';
 

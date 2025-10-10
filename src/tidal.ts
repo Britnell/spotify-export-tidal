@@ -6,7 +6,7 @@ import {
   logout,
   credentialsProvider,
 } from '../tidal-sdk-web/packages/auth/src/index';
-import { createAPIClient } from '../tidal-sdk-web/packages/api/src/index';
+import { createAPIClient } from '../tidal-sdk-web/packages/api/dist/index';
 
 export type TTrack = {
   id: string;
