@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref } from "vue";
 import {
   addTracksStaggered,
   findISRCStaggered,
@@ -8,15 +8,20 @@ import {
   getPlaylistTracks,
   createPlaylist,
   searchTrack,
-} from './tidal';
-import { downloadCsvFile, useSpotify, type SPL, type STrack } from './useSpotify';
-import { parseSearchRes } from './helper';
+} from "./tidal";
+import {
+  downloadCsvFile,
+  useSpotify,
+  type SPL,
+  type STrack,
+} from "./useSpotify";
+import { parseSearchRes } from "./helper";
 
 const spotify = useSpotify();
 const tidal = useTidal();
 const log = ref<string[]>([]);
 const notFoundExports = ref<STrack[]>([]);
-const newname = ref('');
+const newname = ref("");
 const showExport = ref(false);
 const done = ref(false);
 
@@ -25,9 +30,13 @@ const loggedin = computed(() => {
 });
 
 const initlog = () => {
-  log.value = [`Exporting "${spotify.selected.value?.name}" playlist, ${spotify.tracks.value.length} tracks`];
+  log.value = [
+    `Exporting "${spotify.selected.value?.name}" playlist, ${spotify.tracks.value.length} tracks`,
+  ];
   if (tidal.selected.value) {
-    log.value.push(`loaded "${tidal.selected.value.attributes?.name}" , ${tidal.tracks.value.length} tracks`);
+    log.value.push(
+      `loaded "${tidal.selected.value.attributes?.name}" , ${tidal.tracks.value.length} tracks`
+    );
   }
 };
 
@@ -51,7 +60,9 @@ const selectTidal = async (pl: TPL) => {
   initlog();
   showExport.value = false;
   tidal.selected.value = pl;
-  log.value.push(`loading tidal playlist "${tidal.selected.value.attributes?.name}" ...`);
+  log.value.push(
+    `loading tidal playlist "${tidal.selected.value.attributes?.name}" ...`
+  );
 
   const tracks = await getPlaylistTracks(pl.id);
   tidal.tracks.value = tracks;
@@ -69,7 +80,7 @@ const createnew = async () => {
   const resp = await createPlaylist(name);
   const newpl = resp.data?.data;
   if (newpl) {
-    newname.value = '';
+    newname.value = "";
     tidal.playlists.value = [...tidal.playlists.value, newpl];
     selectTidal(newpl);
   }
@@ -81,15 +92,20 @@ const exportPl = async () => {
   if (!tidal.selected.value) {
     return;
   }
-  // console.log(' export ', exportlist);
 
   // * check for duplicates
   const exportlist = spotify.tracks.value;
-  const existingIsrc = tidal.tracks.value.map((tr) => tr.attributes?.isrc?.toUpperCase());
+  const existingIsrc = tidal.tracks.value
+    .map((tr) => tr.attributes?.isrc?.toUpperCase())
+    .filter(Boolean);
 
-  const withoutExisting = exportlist.filter((expo) => !existingIsrc.includes(expo.external_ids.isrc.toUpperCase()));
+  const withoutExisting = exportlist.filter(
+    (expo) => !existingIsrc.includes(expo.external_ids.isrc?.toUpperCase())
+  );
   if (withoutExisting.length === 0) {
-    log.value.push(`all tracks already found on target playlist check your tidal playlist and try reloading`);
+    log.value.push(
+      `all tracks already found on target playlist check your tidal playlist and try reloading`
+    );
     return;
   }
   const duplicates = exportlist.length - withoutExisting.length;
@@ -99,7 +115,9 @@ const exportPl = async () => {
 
   // * find by isrc
   log.value.push(`searching for tracks by isrc... `);
-  const isrcIds = withoutExisting.map((tr: STrack) => tr.external_ids.isrc.toUpperCase());
+  const isrcIds = withoutExisting
+    .map((tr: STrack) => tr.external_ids.isrc?.toUpperCase())
+    .filter(Boolean);
   const foundIsrcs = await findISRCStaggered(isrcIds);
 
   if (foundIsrcs.length > 0) {
@@ -112,7 +130,8 @@ const exportPl = async () => {
   }
 
   const noIsrc = withoutExisting.filter(
-    (tr: STrack) => !foundIsrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc),
+    (tr: STrack) =>
+      !foundIsrcs.some((is) => is.attributes?.isrc === tr.external_ids.isrc)
   );
 
   log.value.push(`${noIsrc.length} tracks not found via isrc`);
@@ -121,7 +140,7 @@ const exportPl = async () => {
 
   let manualsearch = [];
   for (let x = 0; x < noIsrc.length; x++) {
-    log.value.push(`searching for ${x} of ${noIsrc.length}`);
+    log.value.push(`searching for ${x + 1} of ${noIsrc.length}`);
     const missing = noIsrc[x];
     if (missing) {
       const q = {
@@ -129,17 +148,15 @@ const exportPl = async () => {
         art: missing.artists.map((a) => a.name),
         alb: missing.album.name,
       };
-      const sq = [q.name, q.art].flat().join(' ');
-      console.log(q);
+      const sq = [q.name, q.art].flat().join(" ");
       const searchres = await searchTrack(sq);
       const list = parseSearchRes(searchres);
       if (list?.length) {
-        console.log(list);
         manualsearch.push(list[0]);
         log.value.push(`added closest match `);
       } else {
         notFoundExports.value.push(missing);
-        log.value.push(`track not found : ${q.name}, ${q.art.join(', ')} `);
+        log.value.push(`track not found : ${q.name}, ${q.art.join(", ")} `);
       }
     }
   }
@@ -159,6 +176,7 @@ const exportPl = async () => {
 const startAgain = () => {
   tidal.selected.value = null;
   spotify.selected.value = null;
+  notFoundExports.value = [];
   done.value = false;
 };
 
@@ -178,7 +196,9 @@ const downloadcsv = () => {
             <a class="no-underline hover:underline px-2 py-2" href="/">Home</a>
           </li>
           <li class="opacity-100">
-            <a class="no-underline hover:underline px-2 py-2" href="/#FAQ">FAQ</a>
+            <a class="no-underline hover:underline px-2 py-2" href="/#faq"
+              >FAQ</a
+            >
           </li>
           <!-- <li class="opacity-100">
             <a class=" no-underline hover:underline px-2 py-2 " href="/#Support">Support</a>
@@ -190,7 +210,9 @@ const downloadcsv = () => {
   <p></p>
 
   <main class="max-w-[600px] px-2 mx-auto">
-    <h1 class="h2 text-center my-8">Transfer your Playlists from Spotify to Tidal</h1>
+    <h1 class="h2 text-center my-8">
+      Transfer your Playlists from Spotify to Tidal
+    </h1>
     <div class="mt-10">
       <h2 class="h2 step mb-2">login</h2>
       <p v-if="!loggedin">
@@ -202,7 +224,9 @@ const downloadcsv = () => {
     <div class="px-4 py-2" :class="loggedin ? 'space-y-2' : 'space-y-8'">
       <!-- Spotify login -->
       <div v-if="!spotify.loggedin.value">
-        <h3 class="h4 flex gap-2">1. Connect your spotify account to export your playlists</h3>
+        <h3 class="h4 flex gap-2">
+          1. Connect your spotify account to export your playlists
+        </h3>
         <a
           :href="spotify.href"
           class="mt-2 bg-spotify rounded-full px-3 py-1 text-black font-semibold block mx-auto w-min whitespace-nowrap"
@@ -224,7 +248,9 @@ const downloadcsv = () => {
       <!-- tidal login -->
       <div v-if="spotify.loggedin.value">
         <div v-if="!tidal.loggedin.value">
-          <h3 class="h4">2. connect your tidal account you want to import playlists to</h3>
+          <h3 class="h4">
+            2. connect your tidal account you want to import playlists to
+          </h3>
           <button
             class="mt-2 bg-black rounded-full px-3 py-1 border border-white block mx-auto w-min whitespace-nowrap"
             @click="tidal.login"
@@ -234,7 +260,11 @@ const downloadcsv = () => {
         </div>
         <div v-else class="grid grid-cols-2 place-items-start">
           <p class="">✅ Tidal connected</p>
-          <button :href="spotify.href" class="button bg-black rounded-full border border-white" @click="tidal.doLogout">
+          <button
+            :href="spotify.href"
+            class="button bg-black rounded-full border border-white"
+            @click="tidal.doLogout"
+          >
             logout tidal
           </button>
         </div>
@@ -253,8 +283,12 @@ const downloadcsv = () => {
             class="flex gap-3 rounded hover:bg-slate-800/60 px-1 py-0.5"
           >
             {{ pl.name }}
-            <span class="x text-sm text-gray-400"> {{ pl.tracks.total }} tracks </span>
-            <button class="button sm ml-auto mr-4" @click="selectSpotifyPl(pl)">select</button>
+            <span class="x text-sm text-gray-400">
+              {{ pl.tracks.total }} tracks
+            </span>
+            <button class="button sm ml-auto mr-4" @click="selectSpotifyPl(pl)">
+              select
+            </button>
           </li>
         </ul>
       </div>
@@ -262,8 +296,12 @@ const downloadcsv = () => {
       <p v-else class="flex items-center gap-4">
         <span class="x">Exporting :</span>
         "{{ spotify.selected.value.name }}"
-        <span class="text-sm text-gray-400">{{ spotify.selected.value.tracks.total }} tracks</span>
-        <button class="button sm ml-auto mr-4" @click="spotifyUnselect">change</button>
+        <span class="text-sm text-gray-400"
+          >{{ spotify.selected.value.tracks.total }} tracks</span
+        >
+        <button class="button sm ml-auto mr-4" @click="spotifyUnselect">
+          change
+        </button>
       </p>
 
       <!-- select Tidal -->
@@ -277,17 +315,27 @@ const downloadcsv = () => {
           </div>
           <details>
             <summary>
-              <h3 class="h4 inline">or select existing Playlist to import to</h3>
+              <h3 class="h4 inline">
+                or select existing Playlist to import to
+              </h3>
             </summary>
             <ul class="my-4 pl-4 max-h-[50vh] overflow-auto">
               <li
-                v-for="pl in [...tidal.playlists.value, ...tidal.playlists.value, ...tidal.playlists.value]"
+                v-for="pl in [
+                  ...tidal.playlists.value,
+                  ...tidal.playlists.value,
+                  ...tidal.playlists.value,
+                ]"
                 :key="pl.id"
                 class="flex gap-2 items-center px-2 py-0.5 rounded hover:bg-slate-800/60"
               >
                 "{{ pl.attributes?.name }}"
-                <span class="x text-gray-400 text-sm">{{ pl.attributes?.numberOfItems }} tracks</span>
-                <button class="ml-auto mr-2 button sm" @click="selectTidal(pl)">select</button>
+                <span class="x text-gray-400 text-sm"
+                  >{{ pl.attributes?.numberOfItems }} tracks</span
+                >
+                <button class="ml-auto mr-2 button sm" @click="selectTidal(pl)">
+                  select
+                </button>
               </li>
             </ul>
           </details>
@@ -295,8 +343,12 @@ const downloadcsv = () => {
         <p v-else class="flex gap-4 items-center">
           <span> Importing: </span>
           "{{ tidal.selected.value.attributes?.name }}"
-          <span class="x text-sm text-gray-400"> {{ tidal.selected.value.attributes?.numberOfItems }} tracks </span>
-          <button class="button sm ml-auto mr-4" @click="tidalUnselect">change</button>
+          <span class="x text-sm text-gray-400">
+            {{ tidal.selected.value.attributes?.numberOfItems }} tracks
+          </span>
+          <button class="button sm ml-auto mr-4" @click="tidalUnselect">
+            change
+          </button>
         </p>
       </div>
     </div>
@@ -311,22 +363,34 @@ const downloadcsv = () => {
             {{ line }}
           </li>
         </ul>
-        <button v-if="showExport" class="button bg-blu-600 mt-2" @click="exportPl">Start Export</button>
+        <button
+          v-if="showExport"
+          class="button bg-blu-600 mt-2"
+          @click="exportPl"
+        >
+          Start Export
+        </button>
 
-        <button v-if="done" class="button bg-blu-600 mt-2" @click="startAgain">migrate another one</button>
+        <button v-if="done" class="button bg-blu-600 mt-2" @click="startAgain">
+          migrate another one
+        </button>
 
         <div class="my-8" v-if="notFoundExports.length > 0">
           <h4 class="h4 inline">tracks not found:</h4>
           <ul class="x">
-            <li v-for="tr in notFoundExports" class="my-2 flex gap-3" :key="tr.id">
+            <li
+              v-for="tr in notFoundExports"
+              class="my-2 flex gap-3"
+              :key="tr.id"
+            >
               <span class="x"> {{ tr.name }} </span>
-              <span> {{ tr.artists.map((a) => a.name).join(', ') }}</span>
+              <span> {{ tr.artists.map((a) => a.name).join(", ") }}</span>
               <span>
                 {{ tr.album.name }}
               </span>
               <a
                 :href="`https://tidal.com/search?q=${encodeURIComponent(
-                  [tr.name, tr.artists.map((a) => a.name)].flat().join(' '),
+                  [tr.name, tr.artists.map((a) => a.name)].flat().join(' ')
                 )}`"
                 target="_blank"
                 class="underline"

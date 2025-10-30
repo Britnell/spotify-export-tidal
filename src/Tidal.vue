@@ -1,33 +1,30 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { getPlaylistTracks, useTidal, type TPL, type TTrack } from './tidal';
+import { ref, watch } from "vue";
+import { getPlaylistTracks, useTidal, type TPL, type TTrack } from "./tidal";
 
 defineProps<{
   selected: TPL | null;
 }>();
 
-const emit = defineEmits(['pl-tracks', 'update:selected']);
+const emit = defineEmits(["pl-tracks", "update:selected"]);
 
 const { loggedin, login, doLogout, playlists } = useTidal();
 
 const tracks = ref<TTrack[]>([]);
-const newname = ref('');
+const newname = ref("");
 
 watch(loggedin, () => {
   if (!loggedin.value) return;
-  console.log('ll');
 });
 
 const choose = async (pl: TPL) => {
-  emit('update:selected', pl);
+  emit("update:selected", pl);
   const res = await getPlaylistTracks(pl.id);
   tracks.value = res;
-  emit('pl-tracks', tracks.value);
+  emit("pl-tracks", tracks.value);
 };
 
-const create = () => {
-  console.log(' create ', newname.value);
-};
+const create = () => {};
 </script>
 
 <template>
@@ -50,7 +47,9 @@ const create = () => {
         <ul>
           <li v-for="pl in playlists" :key="pl.id" @click="choose(pl)">
             {{ pl.attributes?.name }}
-            <span class="x text-sm ml-4 text-gray-400"> {{ pl.attributes?.numberOfItems }} tracks </span>
+            <span class="x text-sm ml-4 text-gray-400">
+              {{ pl.attributes?.numberOfItems }} tracks
+            </span>
           </li>
         </ul>
       </div>

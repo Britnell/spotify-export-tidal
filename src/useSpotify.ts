@@ -1,9 +1,9 @@
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from "vue";
 
 export const href =
-  'https://accounts.spotify.com/authorize' +
-  '?client_id=37e3c48b005d4e0f827b0e135ed8e58d&response_type=token&redirect_uri=' +
-  encodeURIComponent('http://localhost:5173/app');
+  "https://accounts.spotify.com/authorize" +
+  "?client_id=37e3c48b005d4e0f827b0e135ed8e58d&response_type=token&redirect_uri=" +
+  encodeURIComponent("http://localhost:5173/app");
 
 export type SPL = {
   id: string;
@@ -33,7 +33,7 @@ export type STrack = {
 // "Unable to verify challenge with id 75ee768e-33b8-4b9f-8d42-6b6fbf81fe10"
 
 export function useSpotify() {
-  const token = ref('');
+  const token = ref("");
   const loggedin = computed(() => !!token.value);
   const playlists = ref<SPL[]>([]);
   // const username = ref('');
@@ -42,14 +42,14 @@ export function useSpotify() {
 
   onMounted(async () => {
     const url = new URLSearchParams(window.location.hash.slice(1));
-    const urlToken = url.get('access_token');
+    const urlToken = url.get("access_token");
 
     if (urlToken) {
-      localStorage.setItem('spotify_token', urlToken);
+      localStorage.setItem("spotify_token", urlToken);
       token.value = urlToken;
-      window.location.replace('/app');
+      window.location.replace("/app");
     } else {
-      const storedToken = localStorage.getItem('spotify_token');
+      const storedToken = localStorage.getItem("spotify_token");
       if (storedToken) {
         token.value = storedToken;
       }
@@ -60,13 +60,14 @@ export function useSpotify() {
     // load user palylists
     const resp = await getUsersPlaylists(token.value);
     if (resp) {
+      resp.sort((a, b) => (a.name > b.name ? 1 : -1));
       playlists.value = resp;
     }
   });
 
   const clearToken = () => {
-    token.value = '';
-    localStorage.removeItem('spotify_token');
+    token.value = "";
+    localStorage.removeItem("spotify_token");
   };
 
   type apireturn = {
@@ -76,30 +77,33 @@ export function useSpotify() {
     next: string;
   };
 
-  const spotifyApi = async (path: string, tokenValue: string): Promise<apireturn | null> => {
+  const spotifyApi = async (
+    path: string,
+    tokenValue: string
+  ): Promise<apireturn | null> => {
     try {
-      const res = await fetch('https://api.spotify.com/v1' + path, {
-        method: 'GET',
+      const res = await fetch("https://api.spotify.com/v1" + path, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${tokenValue}`,
         },
       });
 
       if (!res.ok) {
-        throw new Error('Spotify API error: ' + res.status);
+        throw new Error("Spotify API error: " + res.status);
       }
 
       return res.json();
     } catch (error) {
-      console.error(error);
-      clearToken();
+      console.error(path, error);
+      // clearToken();
       return null;
     }
   };
 
   const getUsersPlaylists = async (tokenValue: string) => {
     let allPlaylists: SPL[] = [];
-    let nextUrl = '/me/playlists';
+    let nextUrl = "/me/playlists";
 
     while (nextUrl) {
       const res = await spotifyApi(nextUrl, tokenValue);
@@ -107,14 +111,15 @@ export function useSpotify() {
       allPlaylists = allPlaylists.concat(res.items as SPL[]);
       nextUrl = res.next;
       if (nextUrl) {
-        nextUrl = nextUrl.replace('https://api.spotify.com/v1', '');
+        nextUrl = nextUrl.replace("https://api.spotify.com/v1", "");
         await delay(500);
       }
     }
     return allPlaylists;
   };
 
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   const getPlaylistTracks = async (id: string, tokenValue: string) => {
     let allTracks: any[] = [];
@@ -126,7 +131,7 @@ export function useSpotify() {
       allTracks = allTracks.concat(res.items.map((row) => row.track));
       nextUrl = res.next;
       if (nextUrl) {
-        nextUrl = nextUrl.replace('https://api.spotify.com/v1', '');
+        nextUrl = nextUrl.replace("https://api.spotify.com/v1", "");
         await delay(500);
       }
     }
@@ -147,32 +152,35 @@ export function useSpotify() {
 }
 
 export function exportTracksToCsv(tracks: STrack[]): string {
-  const headers = ['Song Name', 'Artists', 'Album Name', 'Album Release Date'];
+  const headers = ["Song Name", "Artists", "Album Name", "Album Release Date"];
   const csvContent = [
-    headers.join(';'),
+    headers.join(";"),
     ...tracks.map((track) =>
       [
         track.name,
-        track.artists.map((artist) => artist.name).join(','),
+        track.artists.map((artist) => artist.name).join(","),
         track.album.name,
         track.album.release_date,
-      ].join(';'),
+      ].join(";")
     ),
-  ].join('\n');
+  ].join("\n");
 
   return csvContent;
 }
 
-export function downloadCsvFile(tracks: STrack[], filename: string = 'tracks.csv'): void {
+export function downloadCsvFile(
+  tracks: STrack[],
+  filename: string = "tracks.csv"
+): void {
   const csvContent = exportTracksToCsv(tracks);
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
 
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -1,12 +1,12 @@
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from "vue";
 import {
   init,
   initializeLogin,
   finalizeLogin,
   logout,
   credentialsProvider,
-} from '../tidal-sdk-web/packages/auth/src/index';
-import { createAPIClient } from '../tidal-sdk-web/packages/api/dist/index';
+} from "../tidal-sdk-web/packages/auth/src/index";
+import { createAPIClient } from "../tidal-sdk-web/packages/api/dist/index";
 
 export type TTrack = {
   id: string;
@@ -33,16 +33,16 @@ export type TPL = {
   };
 };
 
-const CLIENT_ID = 'GIcepHVXA3SP67Yi';
-let countryCode = 'DE';
-const interval = 600;
-let apitoken = '';
+const CLIENT_ID = "GIcepHVXA3SP67Yi";
+let countryCode = "DE";
+const interval = 200;
+let apitoken = "";
 
 const apiClient = createAPIClient(credentialsProvider);
 
 export function useTidal() {
-  const token = ref('');
-  const userid = ref('');
+  const token = ref("");
+  const userid = ref("");
   const loggedin = computed(() => !!token.value && !!userid.value);
   const playlists = ref<TPL[]>([]);
   const selected = ref<TPL | null>();
@@ -59,20 +59,20 @@ export function useTidal() {
   async function starttidal() {
     await init({
       clientId: CLIENT_ID,
-      credentialsStorageKey: 'authorizationCode',
+      credentialsStorageKey: "authorizationCode",
     });
 
     if (window.location.search.length > 0) {
       await finalizeLogin(window.location.search);
-      window.location.replace('/app');
+      window.location.replace("/app");
       return;
     }
 
     const credentials = await credentialsProvider.getCredentials();
 
-    token.value = credentials.token || '';
+    token.value = credentials.token || "";
     apitoken = token.value;
-    userid.value = credentials.userId || '';
+    userid.value = credentials.userId || "";
 
     if (token.value && userid.value) {
       const res = await getUserPlaylists(userid.value);
@@ -85,19 +85,19 @@ export function useTidal() {
   async function login() {
     await init({
       clientId: CLIENT_ID,
-      credentialsStorageKey: 'authorizationCode',
-      scopes: ['user.read', 'playlists.read', 'playlists.write'],
+      credentialsStorageKey: "authorizationCode",
+      scopes: ["user.read", "playlists.read", "playlists.write"],
     });
     const loginUrl = await initializeLogin({
-      redirectUri: 'http://localhost:5173/app',
+      redirectUri: "http://localhost:5173/app",
     });
-    window.open(loginUrl, '_self');
+    window.open(loginUrl, "_self");
   }
 
   function doLogout() {
     logout();
-    token.value = '';
-    apitoken = '';
+    token.value = "";
+    apitoken = "";
     window.location.reload();
   }
 
@@ -115,29 +115,29 @@ export function useTidal() {
 export async function handleRedirect() {}
 
 export const getUser = () =>
-  apiClient.GET('/users/me').then((res) => {
-    countryCode = res.data?.data.attributes?.country || 'DE';
+  apiClient.GET("/users/me").then((res) => {
+    countryCode = res.data?.data.attributes?.country || "DE";
     return res.data?.data;
   });
 
 export const getUserPlaylists = (uid: string) =>
-  apiClient.GET('/playlists', {
+  apiClient.GET("/playlists", {
     params: {
       query: {
         countryCode,
-        'filter[owners.id]': [uid],
+        "filter[owners.id]": [uid],
       },
     },
   });
 
 export const searchTrack = async (searchTerm: string) => {
-  const search = await apiClient.GET('/searchResults/{id}', {
+  const search = await apiClient.GET("/searchResults/{id}", {
     params: {
       path: { id: searchTerm },
       query: {
         countryCode,
-        explicitFilter: 'include,exclude',
-        include: ['tracks'],
+        explicitFilter: "include,exclude",
+        include: ["tracks"],
       },
     },
   });
@@ -148,12 +148,12 @@ export const searchTrack = async (searchTerm: string) => {
 
   if (!ids) return null;
 
-  const tracks = await apiClient.GET('/tracks', {
+  const tracks = await apiClient.GET("/tracks", {
     params: {
       query: {
         countryCode,
-        include: ['albums', 'artists'],
-        'filter[id]': ids,
+        include: ["albums", "artists"],
+        "filter[id]": ids,
       },
     },
   });
@@ -164,12 +164,12 @@ export const searchTrack = async (searchTerm: string) => {
 
 export const getIRCS = (ids: string[]) => {
   return apiClient
-    .GET('/tracks', {
+    .GET("/tracks", {
       params: {
         query: {
           countryCode,
-          include: ['albums', 'artists'],
-          'filter[isrc]': ids,
+          include: ["albums", "artists"],
+          "filter[isrc]": ids,
         },
       },
     })
@@ -177,7 +177,7 @@ export const getIRCS = (ids: string[]) => {
 };
 
 export const addTracks = (plid: string, trackids: string[]) => {
-  return apiClient.POST('/playlists/{id}/relationships/items', {
+  return apiClient.POST("/playlists/{id}/relationships/items", {
     params: {
       path: { id: plid },
       query: {
@@ -187,13 +187,16 @@ export const addTracks = (plid: string, trackids: string[]) => {
     body: {
       data: trackids.map((id) => ({
         id,
-        type: 'tracks' as const,
+        type: "tracks" as const,
       })),
     },
   });
 };
 
-export async function addTracksStaggered(plid: string, trackids: string[]): Promise<any[]> {
+export async function addTracksStaggered(
+  plid: string,
+  trackids: string[]
+): Promise<any[]> {
   return staggerReq(trackids, 20, async (chunk: string[]) => {
     const response = await addTracks(plid, chunk);
     return [response];
@@ -205,7 +208,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function staggerReq<T, R>(
   items: T[],
   chunkSize: number,
-  processChunk: (chunk: T[]) => Promise<R[] | undefined | void>,
+  processChunk: (chunk: T[]) => Promise<R[] | undefined | void>
 ): Promise<R[]> {
   const chunks: T[][] = [];
 
@@ -222,7 +225,7 @@ export async function staggerReq<T, R>(
         allResults = allResults.concat(result);
       }
     } catch (error) {
-      console.error('Error processing chunk:', error);
+      console.error("Error processing chunk:", error);
       // Continue processing other chunks
     }
     await delay(interval);
@@ -234,13 +237,13 @@ export async function staggerReq<T, R>(
 export async function findISRCStaggered(isrcs: string[]): Promise<TTrack[]> {
   return staggerReq(isrcs, 20, async (chunk: string[]) => {
     const resp = await getIRCS(chunk);
-    if (!resp) throw new Error('no response');
+    if (!resp) throw new Error("no response");
     return resp;
   });
 }
 
 export const createPlaylist = (name: string) => {
-  return apiClient.POST('/playlists', {
+  return apiClient.POST("/playlists", {
     params: {
       query: {
         countryCode,
@@ -248,11 +251,11 @@ export const createPlaylist = (name: string) => {
     },
     body: {
       data: {
-        type: 'playlists',
+        type: "playlists",
         attributes: {
           name,
-          description: 'Created my spotify-tidal migration',
-          accessType: 'UNLISTED',
+          description: "Created my spotify-tidal migration",
+          accessType: "UNLISTED",
         },
       },
     },
@@ -262,11 +265,11 @@ export const createPlaylist = (name: string) => {
 export const getPlaylistTracks = async (id: string) => {
   let allTracks: TTrack[] = [];
 
-  const first = await apiClient.GET('/playlists/{id}/relationships/items', {
+  const first = await apiClient.GET("/playlists/{id}/relationships/items", {
     params: {
       path: { id },
       query: {
-        include: ['items'],
+        include: ["items"],
         countryCode,
       },
     },
@@ -290,14 +293,14 @@ export const getPlaylistTracks = async (id: string) => {
   return allTracks;
 };
 
-const base = 'https://openapi.tidal.com/v2';
+const base = "https://openapi.tidal.com/v2";
 
 const tidalApi = async (path: string) => {
   if (!apitoken) {
-    throw new Error('Not authenticated');
+    throw new Error("Not authenticated");
   }
   const response = await fetch(base + path, {
-    method: 'get',
+    method: "get",
     headers: {
       Authorization: `Bearer ${apitoken}`,
     },
