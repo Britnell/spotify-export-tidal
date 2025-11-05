@@ -8,6 +8,10 @@ import {
 } from "../tidal-sdk-web/packages/auth/src/index";
 import { createAPIClient } from "../tidal-sdk-web/packages/api/dist/index";
 
+const redirectUri = import.meta.env.DEV
+  ? "http://localhost:5173/app"
+  : "https://spotify-tidal-transfer.com/app";
+
 export type TTrack = {
   id: string;
   type: string;
@@ -88,7 +92,6 @@ export function useTidal() {
       credentialsStorageKey: "authorizationCode",
       scopes: ["user.read", "playlists.read", "playlists.write"],
     });
-    const redirectUri = import.meta.env.VITE_REDIRECT_URL;
     const loginUrl = await initializeLogin({
       redirectUri: redirectUri,
     });

@@ -1,6 +1,8 @@
 import { computed, onMounted, ref } from "vue";
 
-const redirectUri = import.meta.env.VITE_REDIRECT_URL;
+const redirectUri = import.meta.env.DEV
+  ? "http://localhost:5173/app"
+  : "https://spotify-tidal-transfer.com/app";
 
 export const href =
   "https://accounts.spotify.com/authorize" +
