@@ -1,9 +1,11 @@
 import { computed, onMounted, ref } from "vue";
 
+const redirectUri = import.meta.env.VITE_REDIRECT_URL;
+
 export const href =
   "https://accounts.spotify.com/authorize" +
   "?client_id=37e3c48b005d4e0f827b0e135ed8e58d&response_type=token&redirect_uri=" +
-  encodeURIComponent("http://localhost:5173/app");
+  encodeURIComponent(redirectUri);
 
 export type SPL = {
   id: string;

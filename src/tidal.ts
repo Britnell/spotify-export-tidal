@@ -88,8 +88,9 @@ export function useTidal() {
       credentialsStorageKey: "authorizationCode",
       scopes: ["user.read", "playlists.read", "playlists.write"],
     });
+    const redirectUri = import.meta.env.VITE_REDIRECT_URL;
     const loginUrl = await initializeLogin({
-      redirectUri: "http://localhost:5173/app",
+      redirectUri: redirectUri,
     });
     window.open(loginUrl, "_self");
   }
