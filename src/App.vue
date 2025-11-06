@@ -228,7 +228,7 @@ const downloadcsv = () => {
           1. Connect your spotify account to export your playlists
         </h3>
         <a
-          :href="spotify.href"
+          :href="spotify.loginUrl.value"
           class="mt-2 bg-spotify rounded-full px-3 py-1 text-black font-semibold block mx-auto w-min whitespace-nowrap"
         >
           login to spotify</a

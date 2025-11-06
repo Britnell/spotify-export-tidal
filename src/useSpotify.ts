@@ -1,8 +1,33 @@
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import {
+  generateOAuthCodeChallenge,
+  sha256,
+  base64URLEncode,
+} from "../tidal-sdk-web/packages/auth/src/utils/utils";
 
 const redirectUri = import.meta.env.DEV
   ? "http://localhost:5173/app"
   : "https://spotify-tidal-transfer.com/app";
+
+export async function generateSpotifyLoginUrl() {
+  const codeVerifier = generateOAuthCodeChallenge();
+  const codeChallenge = await sha256(codeVerifier);
+
+  // Store code verifier for token exchange
+  localStorage.setItem("spotify_code_verifier", codeVerifier);
+
+  const params = new URLSearchParams({
+    client_id: "37e3c48b005d4e0f827b0e135ed8e58d",
+    response_type: "code",
+    redirect_uri: redirectUri,
+    code_challenge: base64URLEncode(codeChallenge),
+    code_challenge_method: "S256",
+    scope:
+      "playlist-read-private playlist-read-collaborative user-read-private user-read-email",
+  });
+
+  return `https://accounts.spotify.com/authorize?${params.toString()}`;
+}
 
 export const href =
   "https://accounts.spotify.com/authorize" +
@@ -43,25 +68,23 @@ export function useSpotify() {
   // const username = ref('');
   const selected = ref<SPL | null>();
   const tracks = ref<STrack[]>([]);
+  const loginUrl = ref("");
 
   onMounted(async () => {
-    const url = new URLSearchParams(window.location.hash.slice(1));
-    const urlToken = url.get("access_token");
+    loginUrl.value = await generateSpotifyLoginUrl();
+  });
 
-    if (urlToken) {
-      localStorage.setItem("spotify_token", urlToken);
-      token.value = urlToken;
-      window.location.replace("/app");
-    } else {
-      const storedToken = localStorage.getItem("spotify_token");
-      if (storedToken) {
-        token.value = storedToken;
-      }
+  onMounted(() => {
+    const storedToken = localStorage.getItem("spotify_token");
+    if (storedToken) {
+      token.value = storedToken;
     }
+  });
 
+  watch(token, async () => {
     if (!token.value) return;
 
-    // load user palylists
+    // load user playlists
     const resp = await getUsersPlaylists(token.value);
     if (resp) {
       resp.sort((a, b) => (a.name > b.name ? 1 : -1));
@@ -69,9 +92,62 @@ export function useSpotify() {
     }
   });
 
+  onMounted(async () => {
+    // check url code
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get("code");
+
+    if (authCode) {
+      try {
+        await exchangeCodeForToken(authCode);
+        window.location.replace("/app");
+        return;
+      } catch (error) {
+        console.error("Token exchange failed:", error);
+        clearToken();
+        return;
+      }
+    }
+  });
+
   const clearToken = () => {
     token.value = "";
     localStorage.removeItem("spotify_token");
+    localStorage.removeItem("spotify_code_verifier");
+  };
+
+  const exchangeCodeForToken = async (code: string) => {
+    const codeVerifier = localStorage.getItem("spotify_code_verifier");
+    if (!codeVerifier) {
+      throw new Error("No code verifier found");
+    }
+
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: redirectUri,
+        client_id: "37e3c48b005d4e0f827b0e135ed8e58d",
+        code_verifier: codeVerifier,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Token exchange failed: " + response.status);
+    }
+
+    const data = await response.json();
+    localStorage.setItem("spotify_token", data.access_token);
+    token.value = data.access_token;
+
+    // Clear the verifier after use
+    localStorage.removeItem("spotify_code_verifier");
+
+    return data.access_token;
   };
 
   type apireturn = {
@@ -83,7 +159,7 @@ export function useSpotify() {
 
   const spotifyApi = async (
     path: string,
-    tokenValue: string
+    tokenValue: string,
   ): Promise<apireturn | null> => {
     try {
       const res = await fetch("https://api.spotify.com/v1" + path, {
@@ -146,6 +222,7 @@ export function useSpotify() {
     loggedin,
     token,
     href,
+    loginUrl,
     clearToken,
     spotifyApi,
     playlists,
@@ -165,7 +242,7 @@ export function exportTracksToCsv(tracks: STrack[]): string {
         track.artists.map((artist) => artist.name).join(","),
         track.album.name,
         track.album.release_date,
-      ].join(";")
+      ].join(";"),
     ),
   ].join("\n");
 
@@ -174,7 +251,7 @@ export function exportTracksToCsv(tracks: STrack[]): string {
 
 export function downloadCsvFile(
   tracks: STrack[],
-  filename: string = "tracks.csv"
+  filename: string = "tracks.csv",
 ): void {
   const csvContent = exportTracksToCsv(tracks);
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
