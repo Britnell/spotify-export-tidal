@@ -105,6 +105,7 @@ export function useSpotify() {
       } catch (error) {
         console.error("Token exchange failed:", error);
         clearToken();
+        window.location.replace("/app");
         return;
       }
     }
